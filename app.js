@@ -163,25 +163,13 @@ app.post('/api/auth/login',
   // Route untuk upload
   app.post('/api/upload', upload.single('cover'),
           [
-            body('judul')
-            .trim()
-            .notEmpty().withMessage('Judul is required')
-            .isLength({ max: 255 }).withMessage('Judul maksimal 255 karakter'),
-
-            body('tahun_rilis')
-            .isLength({ min: 4, max: 4 }).withMessage('Tahun rilis harus 4 digit'),
-
-            body('episode')
-            .isInt({ min: 1 }).withMessage('masukan angka episode yang valid'),
-
-            body('durasi')
-            .isInt({ min: 1 }).withMessage('masukan angka durasi yang valid'),
-
-            body('type')
-            .isIn(['TV', 'Movie', 'ONA', 'OVA']).withMessage('Type harus TV, Movie, ONA, OVA'),
-
-            body('rating')
-            .isIn(['G', 'PG', 'PG-13', 'R']).withMessage('Type harus G, PG, PG-13, R'),
+            body('judul').trim().notEmpty().withMessage('Judul tidak boleh kosong'),
+            body('sinopsis').trim().notEmpty().withMessage('Sinopsis tidak boleh kosong'),
+            body('tahun_rilis').trim().notEmpty().isLength({ min: 4, max: 4 }).withMessage('Tahun rilis harus 4 digit'),
+            body('episode').trim().notEmpty().isInt({ min: 1 }).withMessage('masukan angka episode yang valid'),
+            body('durasi').trim().notEmpty().isInt({ min: 1 }).withMessage('masukan angka durasi yang valid'),
+            body('type').trim().notEmpty().isIn(['TV', 'Movie', 'ONA', 'OVA']).withMessage('Type harus valid (TV, Movie, ONA, OVA)'),
+            body('rating').trim().notEmpty().isIn(['G', 'PG', 'PG-13', 'R']).withMessage('Type harus valid (G, PG, PG-13, R)'),
           ],
   async (req, res) => {
     try {
