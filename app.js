@@ -168,8 +168,9 @@ app.post('/api/auth/login',
         return res.status(400).json({ error: 'File cover wajib diupload' });
       }
   
-      // Upload ke Google Drive
-      const coverUrl = await uploadToImgur(req.file);
+      // Upload ke imgur
+      // const coverUrl = await uploadToImgur(req.file);
+      const { url: coverUrl, deleteHash } = await uploadToImgur(req.file);
   
       // Simpan data ke database
       const [result] = await koneksi.query(
