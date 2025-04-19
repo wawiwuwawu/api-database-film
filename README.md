@@ -112,7 +112,7 @@ Digunakan sebagai endpoint untuk mendaftarkan pengguna baru.
   }
   ```
 
-  Response
+  ###Response
 
   200: OK
   ```json
@@ -151,4 +151,12 @@ Digunakan sebagai endpoint untuk mendaftarkan pengguna baru.
       "message": "Invalid credentials"
   }
   ```
-  
+
+  ### Response lainnya
+
+  500: Server error
+  ```json
+  {
+      "message": "Internal server error"
+  }
+  ```
