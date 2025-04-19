@@ -174,31 +174,31 @@ app.post('/api/auth/login',
   async (req, res) => {
     try {
       
+      const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
 
       if (!errors.isLength()) {
-        return res.status(401).json({ errors: errors.array() });
+        return res.status(400).json({ errors: errors.array() });
       }
 
       if (!errors.isInt()) {
-        return res.status(402).json({ errors: errors.array() });
+        return res.status(400).json({ errors: errors.array() });
       }
 
       if (!req.file) {
-        return res.status(403).json({ error: 'File cover wajib diupload' });
+        return res.status(400).json({ error: 'File cover wajib diupload' });
       }
 
       const { judul } = req.body;
-
       const [existingJudul] = await koneksi.query(
         'SELECT * FROM users WHERE judul = ?', 
         [judul]
       );
 
       if (existingJudul.length > 0) {
-        return res.status(404).json({ 
+        return res.status(409).json({ 
           message: 'Judul sudah ada!' 
         });
       }
@@ -215,7 +215,7 @@ app.post('/api/auth/login',
           req.body.sinopsis,
           req.body.tahun_rilis,
           req.body.type,
-          req.body.episode || null,
+          req.body.episode,
           req.body.durasi,
           req.body.rating,
           coverUrl,
