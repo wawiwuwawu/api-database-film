@@ -137,3 +137,77 @@ app.post('/api/auth/login',
       }
     }
   );
+
+
+// Konfigurasi Upload File
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = '/DATA/AppData/nginx/config/www/img/host';
+    
+    // Pastikan folder exist dengan recursive: true
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    
+    // Set permission folder
+    fs.chmodSync(uploadDir, 0o755);
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + '-' + sanitizedName);
+  }
+});
+
+
+// Endpoint Upload
+app.post('/upload', upload.single('cover'), (req, res) => {
+  const {
+    judul,
+    sinopsis,
+    tahun_file,
+    type,
+    episode,
+    durasi,
+    rating
+  } = req.body;
+
+  // Gunakan domain Anda sebagai base URL
+  const coverUrl = req.file 
+    ? `https://web.wawunime.my.id/img/host/${req.file.filename}`
+    : null;
+
+  const query = `
+    INSERT INTO movies (
+      judul,
+      sinopsis,
+      tahun_file,
+      type,
+      episode,
+      durasi,
+      rating,
+      cover_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    query,
+    [judul, sinopsis, tahun_file, type, episode, durasi, rating, coverUrl],
+    (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ 
+          message: 'Database error',
+          error: err.message 
+        });
+      }
+      res.json({ 
+        message: 'Data berhasil disimpan',
+        coverUrl,
+        data: result
+      });
+    }
+  );
+});
+
