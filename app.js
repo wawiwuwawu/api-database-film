@@ -78,3 +78,62 @@ app.post('/api/auth/register',
       }
     }
   );
+
+
+
+// Login Endpoint
+app.post('/api/auth/login',
+    [
+      body('email').isEmail().withMessage('Invalid email format'),
+      body('password').notEmpty().withMessage('Password is required')
+    ],
+    async (req, res) => {
+      try {
+        // Validasi input
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(400).json({ errors: errors.array() });
+        }
+  
+        const { email, password } = req.body;
+  
+        // Cari user
+        const [users] = await koneksi.query(
+          'SELECT * FROM users WHERE email = ?',
+          [email]
+        );
+        
+        if (users.length === 0) {
+          return res.status(401).json({ 
+            message: 'Invalid credentials' 
+          });
+        }
+  
+        const user = users[0];
+  
+        // Verifikasi password
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+          return res.status(401).json({ 
+            message: 'Invalid credentials' 
+          });
+        }
+  
+        // Generate JWT
+        const token = jwt.sign(
+          { userId: user.id, role: user.role },
+          process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini',
+          { expiresIn: '1h' }
+        );
+  
+        res.status(200).json({
+          message: 'Login successful',
+          token
+        });
+  
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+  );
