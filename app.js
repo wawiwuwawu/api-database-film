@@ -16,7 +16,11 @@ const { oauth2 } = require('googleapis/build/src/apis/oauth2');
 const app = express();
 const PORT = process.env.PORT || 5000;
 // set body parser
-app.use(cors()); // Izinkan request dari domain frontend
+app.use(cors({
+  origin: 'https://web.wawunime.my.id',
+  methods: ['POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+})); // Izinkan request dari domain frontend
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 // buat server nya
