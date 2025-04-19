@@ -27,7 +27,7 @@ Digunakan sebagai endpoint untuk mendaftarkan pengguna baru.
    
    201: Created
    ```json
-{
+   {
     "message": "User registered successfully!",
     "token": "string"
 }
