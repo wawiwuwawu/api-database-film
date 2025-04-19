@@ -159,7 +159,7 @@ const upload = multer({
   }
 }).single('cover');
 
-const upload = multer({ storage: storage });
+
 
 
 // Error Handling Middleware
