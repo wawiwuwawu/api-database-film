@@ -1,12 +1,12 @@
 require('dotenv').config();
 console.log(process.env.DB_HOST);
-const {} = require('googleapis');
+const { google } = require('googleapis');
 const multer = require('multer');
 const express = require('express');
 const path    = require('path');
 const fs = require('fs');
 const { body, validationResult } = require('express-validator');
-const { uploadToGoogleDrive } = require('./utils/googleDrive');
+const { uploadToGoogleDrive } = require('./config/googleDrive');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
@@ -37,41 +37,6 @@ const oauth2Client = new google.auth.OAuth2(
 oauth2Client.setCredentials({refresh_token: REFRESH_TOKEN});
 
 const drive = google.drive({ version: 'v3', auth: oauth2Client });
-
-async function uploadToGoogleDrive(file) {
-  try {
-    // Upload file ke Google Drive
-    const response = await drive.files.create({
-      requestBody: {
-        name: file.filename,
-        parents: [GOOGLE_DRIVE_FOLDER_ID],
-      },
-      media: {
-        mimeType: file.mimetype,
-        body: fs.createReadStream(file.path),
-      },
-      fields: 'id, webViewLink',
-    });
-
-    // Set izin publik
-    await drive.permissions.create({
-      fileId: response.data.id,
-      requestBody: {
-        role: 'reader',
-        type: 'anyone',
-      },
-    });
-
-    return response.data.webViewLink;
-  } catch (err) {
-    throw new Error('Gagal upload ke Google Drive: ' + err.message);
-  } finally {
-    // Hapus file lokal setelah diupload
-    fs.unlinkSync(file.path);
-  }
-}
-
-module.exports = { uploadToGoogleDrive };
 
 
 
@@ -201,61 +166,70 @@ app.post('/api/auth/login',
 
 
 
-const upload = multer({ dest: 'uploads/' });
-
-app.post(
-  '/api/upload',
-  upload.single('cover'),
-  [
-    body('judul').notEmpty().withMessage('Judul wajib diisi'),
-    body('sinopsis').notEmpty().withMessage('Sinopsis wajib diisi'),
-    body('tahun_rilis').isInt({ min: 1900, max: 2100 }).withMessage('Tahun tidak valid'),
-    body('type').isIn(['TV', 'Movie', 'ONA', 'OVA']).withMessage('Type tidak valid'),
-    body('episode').optional().isInt(),
-    body('durasi').isInt().withMessage('Durasi harus angka (menit)'),
-    body('rating').isIn(['G', 'PG', 'PG-13', 'R', 'NC-17']).withMessage('Rating tidak valid'),
-  ],
-  async (req, res) => {
-    try {
-      // Validasi input
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ message: 'File cover wajib diupload' });
-      }
-
-      // 1. Upload ke Google Drive
-      const coverUrl = await uploadToGoogleDrive(req.file);
-
-      // 2. Simpan ke database
-      const [result] = await koneksi.promise().query(
-        `INSERT INTO movies 
-          (judul, sinopsis, tahun_rilis, type, episode, durasi, rating, cover_url)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          req.body.judul,
-          req.body.sinopsis,
-          req.body.tahun_rilis,
-          req.body.type,
-          req.body.episode || null,
-          req.body.durasi,
-          req.body.rating,
-          coverUrl // URL dari Google Drive
-        ]
-      );
-
-      res.json({
-        message: 'Data berhasil disimpan',
-        coverUrl,
-        movieId: result.insertId
-      });
-
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: err.message || 'Server error' });
+  const storage = multer.diskStorage({
+    destination(req, file, cb) {
+      const dir = path.join(__dirname, 'uploads');
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename(req, file, cb) {
+      cb(null, `${Date.now()}-${file.originalname}`);
     }
-  }
-);
+  });
+  const upload = multer({ storage });
+  
+  // Upload route
+  app.post(
+    '/api/upload',
+    upload.single('cover'),
+    [
+      body('judul').notEmpty(),
+      body('sinopsis').notEmpty(),
+      body('tahun_rilis').isInt({ min: 1900, max: 2100 }),
+      body('type').isIn(['TV','Movie','ONA','OVA']),
+      body('durasi').isInt(),
+      body('rating').isIn(['G','PG','PG-13','R','NC-17'])
+    ],
+    async (req, res, next) => {
+      try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(400).json({ errors: errors.array() });
+        }
+        if (!req.file) {
+          return res.status(400).json({ message: 'File cover wajib diupload' });
+        }
+  
+        // ▶️ Panggil fungsi hasil impor, bukan yang dideklarasi ulang
+        const coverUrl = await uploadToGoogleDrive(req.file);
+  
+        const [result] = await koneksi.promise().query(
+          `INSERT INTO movies 
+           (judul,sinopsis,tahun_rilis,type,episode,durasi,rating,cover_url)
+           VALUES (?,?,?,?,?,?,?,?)`,
+          [
+            req.body.judul,
+            req.body.sinopsis,
+            req.body.tahun_rilis,
+            req.body.type,
+            req.body.episode||null,
+            req.body.durasi,
+            req.body.rating,
+            coverUrl
+          ]
+        );
+        res.json({ message: 'Data berhasil disimpan', coverUrl, movieId: result.insertId });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+  
+  // Error handler
+  app.use((err, req, res, next) => {
+    console.error(err);
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: err.message, code: err.code });
+    }
+    res.status(500).json({ message: err.message });
+  });
