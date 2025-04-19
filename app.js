@@ -1,14 +1,17 @@
 require('dotenv').config();
 console.log(process.env.DB_HOST);
+const {} = require('googleapis');
 const multer = require('multer');
 const express = require('express');
 const path    = require('path');
 const fs = require('fs');
 const { body, validationResult } = require('express-validator');
+const { uploadToGoogleDrive } = require('./utils/googleDrive');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const koneksi = require('./config/database');
+const { oauth2 } = require('googleapis/build/src/apis/oauth2');
 const app = express();
 const PORT = process.env.PORT || 5000;
 // set body parser
@@ -16,6 +19,59 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 // buat server nya
 app.listen(PORT, () => console.log(`Server running at port: ${PORT}`));
+
+const CLIENT_ID = '596906828762-ihco36jj00mepv1poa3ldi5coallrh4r.apps.googleusercontent.com'
+const CLIENT_SECRET = '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';
+const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
+
+const REFRESH_TOKEN = '1//04WjUYB-KMDmiCgYIARAAGAQSNwF-L9IrYW7HlQzXLLdf-oecx3Bz7EflEyhYwnxKCLKRbB5anCSbG121MkU0tItv7VNw1yHnFqA';
+
+
+// Konfigurasi OAuth2 Client
+const oauth2Client = new google.auth.OAuth2(
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URI
+);
+
+oauth2Client.setCredentials({refresh_token: REFRESH_TOKEN});
+
+const drive = google.drive({ version: 'v3', auth: oauth2Client });
+
+async function uploadToGoogleDrive(file) {
+  try {
+    // Upload file ke Google Drive
+    const response = await drive.files.create({
+      requestBody: {
+        name: file.filename,
+        parents: [GOOGLE_DRIVE_FOLDER_ID],
+      },
+      media: {
+        mimeType: file.mimetype,
+        body: fs.createReadStream(file.path),
+      },
+      fields: 'id, webViewLink',
+    });
+
+    // Set izin publik
+    await drive.permissions.create({
+      fileId: response.data.id,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    });
+
+    return response.data.webViewLink;
+  } catch (err) {
+    throw new Error('Gagal upload ke Google Drive: ' + err.message);
+  } finally {
+    // Hapus file lokal setelah diupload
+    fs.unlinkSync(file.path);
+  }
+}
+
+module.exports = { uploadToGoogleDrive };
 
 
 
@@ -142,114 +198,64 @@ app.post('/api/auth/login',
   );
 
 
-  app.use('/img/host', express.static(path.join(__dirname, 'public/img/host')));
-
-
-// 1) Definisikan storage sebelum membuat middleware upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, 'public/img/host'); // Path baru
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true }); // Buat folder secara rekursif
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname;
-    cb(null, uniqueName);
-  }
-});
 
 
 
-// 2) Buat middleware upload sekali saja
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
-  fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|webp/;
-    const okMime = allowed.test(file.mimetype);
-    const okExt  = allowed.test(path.extname(file.originalname).toLowerCase());
-    if (okMime && okExt) return cb(null, true);
-    cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'Format file tidak valid'));
-  }
-});
+const upload = multer({ dest: 'uploads/' });
 
-
-// 4) Endpoint Upload
-//    Jangan panggil .single lagi di sini karena sudah diset di middleware 'upload'
 app.post(
   '/api/upload',
   upload.single('cover'),
   [
     body('judul').notEmpty().withMessage('Judul wajib diisi'),
     body('sinopsis').notEmpty().withMessage('Sinopsis wajib diisi'),
-    body('tahun_rilis')
-      .isInt({ min: 1900, max: 2100 })
-      .withMessage('Tahun rilis harus angka 4 digit'),
-    body('type')
-      .isIn(['TV', 'Movie', 'ONA', 'OVA'])
-      .withMessage('Type harus TV, Movie, ONA, atau OVA'),
-    body('episode')
-      .optional({ checkFalsy: true })
-      .isInt(),
+    body('tahun_rilis').isInt({ min: 1900, max: 2100 }).withMessage('Tahun tidak valid'),
+    body('type').isIn(['TV', 'Movie', 'ONA', 'OVA']).withMessage('Type tidak valid'),
+    body('episode').optional().isInt(),
     body('durasi').isInt().withMessage('Durasi harus angka (menit)'),
-    body('rating')
-      .isIn(['G', 'PG', 'PG-13', 'R', 'NC-17'])
-      .withMessage('Rating tidak valid'),
+    body('rating').isIn(['G', 'PG', 'PG-13', 'R', 'NC-17']).withMessage('Rating tidak valid'),
   ],
-  async (req, res, next) => {
+  async (req, res) => {
     try {
+      // Validasi input
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ message: errors.array().map(e => e.msg).join(', ') });
+        return res.status(400).json({ errors: errors.array() });
       }
+
       if (!req.file) {
         return res.status(400).json({ message: 'File cover wajib diupload' });
       }
 
+      // 1. Upload ke Google Drive
+      const coverUrl = await uploadToGoogleDrive(req.file);
+
+      // 2. Simpan ke database
       const [result] = await koneksi.promise().query(
-        `INSERT INTO movies (judul, sinopsis, tahun_rilis, type, episode, durasi, rating, cover_url)
+        `INSERT INTO movies 
+          (judul, sinopsis, tahun_rilis, type, episode, durasi, rating, cover_url)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           req.body.judul,
           req.body.sinopsis,
           req.body.tahun_rilis,
           req.body.type,
-          req.body.episode,
+          req.body.episode || null,
           req.body.durasi,
           req.body.rating,
-          `/img/host/${req.file.filename}`
+          coverUrl // URL dari Google Drive
         ]
       );
 
       res.json({
         message: 'Data berhasil disimpan',
-        cover_url: `/img/host/${req.file.filename}`,
+        coverUrl,
         movieId: result.insertId
       });
 
     } catch (err) {
-      next(err);
+      console.error(err);
+      res.status(500).json({ message: err.message || 'Server error' });
     }
   }
 );
-
-// 5) Error Handling Middleware (harus di akhir)
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-
-  if (err instanceof multer.MulterError) {
-    // Kesalahan spesifik Multer
-    return res.status(400).json({
-      message: `File upload error: ${err.message}`,
-      code: err.code
-    });
-  }
-
-  // Lain‑lain
-  res.status(500).json({
-    message: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
-});
