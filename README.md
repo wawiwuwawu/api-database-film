@@ -35,9 +35,9 @@ Digunakan sebagai endpoint untuk mendaftarkan pengguna baru.
    400: Bad Request
    ```json
    {
-       "message": "Email already exists!"
+       "massage": "Email already exists!"
    }
-```
+   ```
    
    400: Bad Request
    ```json
@@ -77,20 +77,22 @@ Digunakan sebagai endpoint untuk mendaftarkan pengguna baru.
             "location": "body"
         }
     ]
-}
-```
+  }
+  ```
+
+
 
   400: Bad Request
   ```json
-{
-    "errors": [
-        {
-            "type": "field",
-            "value": "1318",
-            "msg": "Password must be at least 6 characters",
-            "path": "password",
-            "location": "body"
-        }
-    ]
-}
-```
+  {
+      "errors": [
+          {
+              "type": "field",
+              "value": "1318",
+              "msg": "Password must be at least 6 characters",
+              "path": "password",
+              "location": "body"
+          }
+      ]
+  }
+  ```
