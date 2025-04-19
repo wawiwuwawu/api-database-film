@@ -149,7 +149,7 @@ app.post('/api/auth/login',
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Pastikan folder 'uploads/' sudah ada, atau buat dulu dengan fs.mkdirSync
-    const uploadDir = path.join(__dirname, 'uploads');
+    const uploadDir = path.join(__dirname, '/img/host/');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -184,7 +184,9 @@ app.post(
   upload.single('cover'),
   [
     body('judul').notEmpty(),
-    body('tahun_file').isInt(),
+    body('sinopsis').notEmpty(),
+    body('tahun_rilis').notEmpty(),
+    body('tahun_rilis').isInt(),
     body('durasi').notEmpty(),
     body('rating').notEmpty()
   ],
@@ -198,21 +200,22 @@ app.post(
         return res.status(400).json({ message: 'File cover wajib diupload' });
       }
 
-      const [result] = await db.promise().query(
-        `INSERT INTO movies (judul, tahun_file, durasi, rating, cover_path)
-         VALUES (?, ?, ?, ?, ?)`,
+      const [result] = await koneksi.promise().query(
+        `INSERT INTO movies (judul, sinopsis, tahun_rilis, type, episode, durasi, cover_url)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           req.body.judul,
-          req.body.tahun_file,
+          req.body.sinopsis,
+          req.body.tahun_rilis,
+          req.body.type,
           req.body.durasi,
-          req.body.rating,
-          req.file.filename
+          req.file.cover_url
         ]
       );
 
       res.json({
         message: 'Data berhasil disimpan',
-        coverUrl: `/uploads/${req.file.filename}`,
+        cover_url: `/img/host/${req.file.filename}`,
         movieId: result.insertId
       });
 
