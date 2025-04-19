@@ -179,14 +179,6 @@ app.post('/api/auth/login',
         return res.status(400).json({ errors: errors.array() });
       }
 
-      if (!errors.isLength()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      if (!errors.isInt()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
       if (!req.file) {
         return res.status(400).json({ error: 'File cover wajib diupload' });
       }
