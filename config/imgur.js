@@ -24,7 +24,7 @@ const uploadToImgur = async (file) => {
     // Return URL gambar dan deletehash untuk manajemen
     return {
       url: response.data.link,
-      deleteHash: response.data.deletehash
+    //   deleteHash: response.data.deletehash
     };
     
   } catch (error) {
