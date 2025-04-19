@@ -18,9 +18,9 @@ const PORT = process.env.PORT || 5000;
 // set body parser
 app.use(cors({
   origin: 'https://web.wawunime.my.id',
-  methods: ['POST'],
+  methods: ['POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-})); // Izinkan request dari domain frontend
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 // buat server nya
