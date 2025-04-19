@@ -182,7 +182,7 @@ app.post('/api/auth/login',
 
             body('rating')
             .isIn(['G', 'PG', 'PG-13', 'R']).withMessage('Type harus G, PG, PG-13, R'),
-          ]
+          ],
   async (req, res) => {
     try {
       // Validasi input (gunakan express-validator)
