@@ -185,7 +185,7 @@ app.post('/api/auth/login',
 
       const { judul } = req.body;
       const [existingJudul] = await koneksi.query(
-        'SELECT * FROM movies WHERE judul = ?', 
+        'SELECT * FROM movies WHERE LOWER(judul) = LOWER(?)', 
         [judul]
       );
 
