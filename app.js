@@ -201,14 +201,15 @@ app.post(
       }
 
       const [result] = await koneksi.promise().query(
-        `INSERT INTO movies (judul, sinopsis, tahun_rilis, type, episode, durasi, cover_url)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO movies (judul, sinopsis, tahun_rilis, type, episode, durasi, rating, cover_url)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           req.body.judul,
           req.body.sinopsis,
           req.body.tahun_rilis,
           req.body.type,
           req.body.durasi,
+          req.body.rating,
           req.file.cover_url
         ]
       );
