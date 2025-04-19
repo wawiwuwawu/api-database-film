@@ -27,12 +27,11 @@ Digunakan sebagai endpoint untuk mendaftarkan pengguna baru.
    
    201: Created
    ```json
-   {
-    "message": "User registered successfully!",
-    "token": "string"
-}
-```
-   
+    {
+       "message": "Email already exists!"
+       "token" : "String"
+   }
+   ```
    400: Bad Request
    ```json
    {
