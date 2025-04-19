@@ -161,7 +161,29 @@ app.post('/api/auth/login',
   });
   
   // Route untuk upload
-  app.post('/api/upload', upload.single('cover'), async (req, res) => {
+  app.post('/api/upload', upload.single('cover'),
+          [
+            body('judul')
+            .trim(),
+            .notEmpty().withMessage('Judul is required'),
+            .isLength({ max: 255 }).withMessage('Judul maksimal 255 karakter'),
+
+            body('tahun_rilis')
+            .isLength({ min: 4, max: 4 }).withMessage('Tahun rilis harus 4 digit'),
+
+            body('episode')
+            .isInt({ min: 1 }).withMessage('masukan angka episode yang valid'),
+
+            body('durasi')
+            .isInt({ min: 1 }).withMessage('masukan angka durasi yang valid'),
+
+            body('type')
+            .isIn(['TV', 'Movie', 'ONA', 'OVA']).withMessage('Type harus TV, Movie, ONA, OVA'),
+
+            body('rating')
+            .isIn(['G', 'PG', 'PG-13', 'R']).withMessage('Type harus G, PG, PG-13, R'),
+          ]
+  async (req, res) => {
     try {
       // Validasi input (gunakan express-validator)
       if (!req.file) {
@@ -169,7 +191,6 @@ app.post('/api/auth/login',
       }
   
       // Upload ke imgur
-      // const coverUrl = await uploadToImgur(req.file);
       const { url: coverUrl, deleteHash } = await uploadToImgur(req.file);
   
       // Simpan data ke database
