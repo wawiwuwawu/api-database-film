@@ -1,4 +1,4 @@
-const imgur = require('imgur');
+const { ImgurClient } = require('imgur');
 const fs = require('fs');
 
 // Konfigurasi Imgur
@@ -7,8 +7,8 @@ const IMGUR_CLIENT_SECRET = 'a748da9244eabda1162ff4b2e38ac4fa8b5ebc9a';
 
 // Inisialisasi client Imgur
 const imgurClient = new ImgurClient({
-  clientId: IMGUR_CLIENT_ID,
-  clientSecret: IMGUR_CLIENT_SECRET
+  clientId: de3f65c7fcf374a,
+  clientSecret: a748da9244eabda1162ff4b2e38ac4fa8b5ebc9a
 });
 
 const uploadToImgur = async (file) => {
