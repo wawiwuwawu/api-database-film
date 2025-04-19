@@ -1,5 +1,6 @@
 require('dotenv').config();
 console.log(process.env.DB_HOST);
+const multer = require('multer');
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
@@ -139,26 +140,23 @@ app.post('/api/auth/login',
   );
 
 
-// Konfigurasi Upload File
+// Konfigurasi Multer
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: function (req, file, cb) {
     const uploadDir = '/DATA/AppData/nginx/config/www/img/host';
-    
-    // Pastikan folder exist dengan recursive: true
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    
-    // Set permission folder
-    fs.chmodSync(uploadDir, 0o755);
     cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
-    const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + '-' + sanitizedName);
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const filename = Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
+    cb(null, filename);
   }
 });
+
+const upload = multer({ storage: storage });
 
 
 // Endpoint Upload
