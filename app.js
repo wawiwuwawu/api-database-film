@@ -185,7 +185,7 @@ app.post('/api/auth/login',
 
       const { judul } = req.body;
       const [existingJudul] = await koneksi.query(
-        'SELECT * FROM users WHERE judul = ?', 
+        'SELECT * FROM movies WHERE judul = ?', 
         [judul]
       );
 
