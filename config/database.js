@@ -3,7 +3,7 @@ require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 const koneksi = mysql.createPool({
-  host: '192.168.0.131',
+  host: 'localhost',
   port: 3306,
   user: 'root',
   password: 'dedeari123',
