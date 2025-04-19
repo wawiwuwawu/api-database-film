@@ -173,8 +173,8 @@ app.post('/api/auth/login',
   
       // Simpan data ke database
       const [result] = await koneksi.query(
-        `INSERT INTO movies (judul, sinopsis, tahun_rilis, type, episode, durasi, rating, cover_url) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO movies (judul, sinopsis, tahun_rilis, type, episode, durasi, rating, cover_url, delete_hash) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           req.body.judul,
           req.body.sinopsis,
@@ -183,7 +183,8 @@ app.post('/api/auth/login',
           req.body.episode || null,
           req.body.durasi,
           req.body.rating,
-          coverUrl
+          coverUrl,
+          deleteHash
         ]
       );
   
