@@ -166,18 +166,12 @@ const storage = multer.diskStorage({
 // 2) Buat middleware upload sekali saja
 const upload = multer({
   storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-    files: 1
-  },
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|webp/;
-    const mimetype  = allowedTypes.test(file.mimetype);
-    const extname   = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    
-    if (mimetype && extname) {
-      return cb(null, true);
-    }
+    const allowed = /jpeg|jpg|png|webp/;
+    const okMime = allowed.test(file.mimetype);
+    const okExt  = allowed.test(path.extname(file.originalname).toLowerCase());
+    if (okMime && okExt) return cb(null, true);
     cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'Format file tidak valid'));
   }
 });
@@ -185,46 +179,48 @@ const upload = multer({
 
 // 4) Endpoint Upload
 //    Jangan panggil .single lagi di sini karena sudah diset di middleware 'upload'
-app.post('/api/upload', upload.single('cover'), async (req, res, next) => {
-  try {
-    // Validasi Input
-    const requiredFields = ['judul', 'tahun_file', 'durasi', 'rating'];
-    const missingFields = requiredFields.filter(f => !req.body[f]);
-    if (missingFields.length) {
-      return res.status(400).json({
-        message: `Field wajib diisi: ${missingFields.join(', ')}`
+app.post(
+  '/api/upload',
+  upload.single('cover'),
+  [
+    body('judul').notEmpty(),
+    body('tahun_file').isInt(),
+    body('durasi').notEmpty(),
+    body('rating').notEmpty()
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ message: errors.array().map(e => e.msg).join(', ') });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: 'File cover wajib diupload' });
+      }
+
+      const [result] = await db.promise().query(
+        `INSERT INTO movies (judul, tahun_file, durasi, rating, cover_path)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          req.body.judul,
+          req.body.tahun_file,
+          req.body.durasi,
+          req.body.rating,
+          req.file.filename
+        ]
+      );
+
+      res.json({
+        message: 'Data berhasil disimpan',
+        coverUrl: `/uploads/${req.file.filename}`,
+        movieId: result.insertId
       });
+
+    } catch (err) {
+      next(err);
     }
-
-    // Validasi File sudah otomatis lewat multer, tapi cek tambahan:
-    if (!req.file) {
-      return res.status(400).json({ message: 'File cover wajib diupload' });
-    }
-
-    // Simpan ke database
-    const [result] = await db.promise().query(
-      `INSERT INTO movies (judul, tahun_file, durasi, rating, cover_path)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        req.body.judul,
-        req.body.tahun_file,
-        req.body.durasi,
-        req.body.rating,
-        req.file.filename
-      ]
-    );
-
-    // Berikan URL atau path file ke client
-    res.json({
-      message: 'Data berhasil disimpan',
-      coverUrl: `/uploads/${req.file.filename}`,
-      movieId: result.insertId
-    });
-
-  } catch (err) {
-    next(err); // Oper ke middleware error di bawah
   }
-});
+);
 
 // 5) Error Handling Middleware (harus di akhir)
 app.use((err, req, res, next) => {
