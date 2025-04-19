@@ -142,16 +142,15 @@ app.post('/api/auth/login',
   );
 
 
-
+  app.use('/img/host', express.static(path.join(__dirname, 'public/img/host')));
 
 
 // 1) Definisikan storage sebelum membuat middleware upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Pastikan folder 'uploads/' sudah ada, atau buat dulu dengan fs.mkdirSync
-    const uploadDir = path.join(__dirname, '/img/host/');
+    const uploadDir = path.join(__dirname, 'public/img/host'); // Path baru
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+      fs.mkdirSync(uploadDir, { recursive: true }); // Buat folder secara rekursif
     }
     cb(null, uploadDir);
   },
@@ -183,12 +182,21 @@ app.post(
   '/api/upload',
   upload.single('cover'),
   [
-    body('judul').notEmpty(),
-    body('sinopsis').notEmpty(),
-    body('tahun_rilis').notEmpty(),
-    body('tahun_rilis').isInt(),
-    body('durasi').notEmpty(),
-    body('rating').notEmpty()
+    body('judul').notEmpty().withMessage('Judul wajib diisi'),
+    body('sinopsis').notEmpty().withMessage('Sinopsis wajib diisi'),
+    body('tahun_rilis')
+      .isInt({ min: 1900, max: 2100 })
+      .withMessage('Tahun rilis harus angka 4 digit'),
+    body('type')
+      .isIn(['TV', 'Movie', 'ONA', 'OVA'])
+      .withMessage('Type harus TV, Movie, ONA, atau OVA'),
+    body('episode')
+      .optional({ checkFalsy: true })
+      .isInt(),
+    body('durasi').isInt().withMessage('Durasi harus angka (menit)'),
+    body('rating')
+      .isIn(['G', 'PG', 'PG-13', 'R', 'NC-17'])
+      .withMessage('Rating tidak valid'),
   ],
   async (req, res, next) => {
     try {
@@ -208,9 +216,10 @@ app.post(
           req.body.sinopsis,
           req.body.tahun_rilis,
           req.body.type,
+          req.body.episode,
           req.body.durasi,
           req.body.rating,
-          req.file.cover_url
+          `/img/host/${req.file.filename}`
         ]
       );
 
