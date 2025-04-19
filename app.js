@@ -7,7 +7,7 @@ const { google } = require('googleapis');
 const fs = require('fs');
 const cors = require('cors');
 const { body, validationResult } = require('express-validator');
-const { uploadToGoogleDrive } = require('./config/googleDrive');
+const { uploadToImgur } = require('./config/imgur.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
@@ -169,7 +169,7 @@ app.post('/api/auth/login',
       }
   
       // Upload ke Google Drive
-      const coverUrl = await uploadToGoogleDrive(req.file);
+      const coverUrl = await uploadToImgur(req.file);
   
       // Simpan data ke database
       const [result] = await koneksi.query(
