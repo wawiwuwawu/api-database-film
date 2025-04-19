@@ -29,7 +29,7 @@ Digunakan sebagai endpoint untuk mendaftarkan pengguna baru.
    ```json
     {
        "message": "Email already exists!"
-       "token" : "String"
+       "token" : "string"
    }
    ```
    400: Bad Request
@@ -96,3 +96,59 @@ Digunakan sebagai endpoint untuk mendaftarkan pengguna baru.
       ]
   }
   ```
+
+  ### POST /api/auth/login
+
+  Digunakan sebagai endpoint untuk verifikasi akun pada saat login ke dalam aplikasi.
+
+  **payload**
+
+    Role "customer"
+
+  ```
+  {
+      "email": "string",
+      "password": "string"
+  }
+  ```
+
+  Response
+
+  200: OK
+  ```json
+  {
+      "email": "string"
+      "token": "string"
+  }
+  ```
+
+  400: Bad Request
+  ```json
+  {
+      "errors": [
+          {
+              "type": "field",
+              "value": "",
+              "msg": "Invalid email format",
+              "path": "email",
+              "location": "body"
+          }
+          {
+              "type": "field",
+              "value": "",
+              "msg": "Password is required",
+              "path": "password",
+              "location": "body"
+          }
+      ]
+  }
+  ```
+
+
+  401: Unauthorized
+  ```json
+  {
+      "message": "Invalid credentials"
+  }
+  ```
+  
