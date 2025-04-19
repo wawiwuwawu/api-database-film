@@ -1,4 +1,4 @@
-const { ImgurClient } = require('imgur');
+const imgur = require('imgur');
 const fs = require('fs');
 
 // Konfigurasi Imgur

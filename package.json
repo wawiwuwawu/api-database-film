@@ -9,7 +9,6 @@
   "author": "dede",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
@@ -17,7 +16,7 @@
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "googleapis": "^148.0.0",
-    "imgur": "^1.0.2",
+    "imgur": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.2",
     "mysql2": "^3.14.0"
