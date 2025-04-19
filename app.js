@@ -164,8 +164,8 @@ app.post('/api/auth/login',
   app.post('/api/upload', upload.single('cover'),
           [
             body('judul')
-            .trim(),
-            .notEmpty().withMessage('Judul is required'),
+            .trim()
+            .notEmpty().withMessage('Judul is required')
             .isLength({ max: 255 }).withMessage('Judul maksimal 255 karakter'),
 
             body('tahun_rilis')
