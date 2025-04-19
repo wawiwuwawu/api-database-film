@@ -185,7 +185,7 @@ const upload = multer({
 
 // 4) Endpoint Upload
 //    Jangan panggil .single lagi di sini karena sudah diset di middleware 'upload'
-app.post('/upload', upload.single('cover'), async (req, res, next) => {
+app.post('/api/upload', upload.single('cover'), async (req, res, next) => {
   try {
     // Validasi Input
     const requiredFields = ['judul', 'tahun_file', 'durasi', 'rating'];
