@@ -1,4 +1,3 @@
-// config/database.js
 require('dotenv').config();
 const mysql = require('mysql2/promise');
 
@@ -14,10 +13,4 @@ const koneksi = mysql.createPool({
   multipleStatements: true
 });
 
-module.exports = koneksi;
-// koneksi database
-// koneksi.connect((err) => {
-//     if (err) throw err;
-//     console.log('MySQL Connected...');
-// });
 module.exports = koneksi;
