@@ -1,8 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const path    = require('path');
 const fs = require('fs');
+const { body, validationResult } = require('express-validator');
+const koneksi = require('./config/database');
 const { uploadToImgur } = require('./config/imgur.js');
 const upload = require('./utiliti/multer.js');
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 
 
