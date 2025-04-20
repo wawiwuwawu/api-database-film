@@ -16,8 +16,8 @@ const koneksi = mysql.createPool({
 
 
 // koneksi database
-koneksi.connect((err) => {
-    if (err) throw err;
-    console.log('MySQL Connected...');
-});
+// koneksi.connect((err) => {
+//     if (err) throw err;
+//     console.log('MySQL Connected...');
+// });
 module.exports = koneksi;
