@@ -2,9 +2,9 @@ const express = require('express');
 const path    = require('path');
 const fs = require('fs');
 const { body, validationResult } = require('express-validator');
-const koneksi = require('./config/database');
-const { uploadToImgur } = require('./config/imgur.js');
-const upload = require('./utiliti/multer.js');
+const koneksi = require('../config/database');
+const { uploadToImgur } = require('../config/imgur.js');
+const upload = require('../utils/multer.js');
 const router = express.Router();
 
 
