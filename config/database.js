@@ -14,7 +14,7 @@ const koneksi = mysql.createPool({
   multipleStatements: true
 });
 
-
+module.exports = koneksi;
 // koneksi database
 // koneksi.connect((err) => {
 //     if (err) throw err;
