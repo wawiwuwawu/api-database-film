@@ -12,7 +12,7 @@ const router = express.Router();
 
   
   // Route untuk upload
-  router.post('/api/upload', upload.single('cover'),
+  router.post('/upload', upload.single('cover'),
           [
             body('judul').trim().notEmpty().withMessage('Judul tidak boleh kosong'),
             body('sinopsis').trim().notEmpty().withMessage('Sinopsis tidak boleh kosong'),
