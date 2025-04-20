@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const path    = require('path');
 const fs = require('fs');
@@ -6,16 +5,14 @@ const { body, validationResult } = require('express-validator');
 const koneksi = require('./config/database');
 const { uploadToImgur } = require('./config/imgur.js');
 const upload = require('./utiliti/multer.js');
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+const router = express.Router();
 
 
 
 
   
   // Route untuk upload
-  app.post('/api/upload', upload.single('cover'),
+  router.post('/api/upload', upload.single('cover'),
           [
             body('judul').trim().notEmpty().withMessage('Judul tidak boleh kosong'),
             body('sinopsis').trim().notEmpty().withMessage('Sinopsis tidak boleh kosong'),
@@ -86,5 +83,4 @@ app.use(express.urlencoded({ extended: false }));
   });
 
 
-
-module.exports = movie;
+module.exports = router;

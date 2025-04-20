@@ -7,18 +7,14 @@ const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const koneksi = require('./config/database');
-const movies = require('./routes/movies');
+const moviesRouter = require('./routes/movies');
 const app = express();
 const PORT = process.env.PORT || 5000;
 // set body parser
-app.use(cors({
-  origin: 'https://web.wawunime.my.id',
-  methods: ['POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use('/api/movies', movies);
+app.use('/api/movies', moviesRouter);
 app.listen(PORT, () => console.log(`Server running at port: ${PORT}`));
 
 
