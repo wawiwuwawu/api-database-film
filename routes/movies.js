@@ -11,7 +11,7 @@ const router = express.Router();
 
 
   
-  // Route untuk upload
+  
   router.post('/upload', upload.single('cover'),
           [
             body('judul').trim().notEmpty().withMessage('Judul tidak boleh kosong'),
