@@ -1,41 +1,19 @@
-
-console.log('[DEBUG] Loading models/index.js');
-console.log('[DEBUG] User model:', User);
-console.log('[DEBUG] Movie model:', Movie);
-console.log('[DEBUG] Genre model:', Genre);
-console.log('[DEBUG] Theme model:', Theme);
-console.log('[DEBUG] Staff model:', Staff);
-console.log('[DEBUG] Seiyu model:', Seiyu);
-console.log('[DEBUG] Karakter model:', Karakter);
-console.log('[DEBUG] MovieSeiyu model:', MovieSeiyu);
-console.log('[DEBUG] MovieGenre model:', MovieGenre);
-console.log('[DEBUG] MovieStaff model:', MovieStaff);
-console.log('[DEBUG] MovieTheme model:', MovieTheme);
-console.log('[DEBUG] sequelize:', sequelize);
-
-
-
+// models/index.js
 const sequelize = require('../config/sequelize');
 const { DataTypes } = require('sequelize');
 
 // Import semua model
-const modelDefiners = [
-  require('./User'),
-  require('./Movie'),
-  require('./Genre'),
-  require('./Theme'),
-  require('./Staff'),
-  require('./Seiyu'),
-  require('./Karakter'),
-  require('./MovieSeiyu'),
-  require('./MovieGenre'),
-  require('./MovieTheme'),
-  require('./MovieStaff')
-];
-
-modelDefiners.forEach(definer => definer(sequelize, DataTypes));
-
-const { User, Movie, Genre, Theme, Staff, Seiyu, Karakter, MovieSeiyu, MovieGenre, MovieStaff, MovieTheme } = sequelize.models;
+const User = require('./User')(sequelize, DataTypes);
+const Movie = require('./Movie')(sequelize, DataTypes);
+const Genre = require('./Genre')(sequelize, DataTypes);
+const Theme = require('./Theme')(sequelize, DataTypes);
+const Staff = require('./Staff')(sequelize, DataTypes);
+const Seiyu = require('./Seiyu')(sequelize, DataTypes);
+const Karakter = require('./Karakter')(sequelize, DataTypes);
+const MovieSeiyu = require('./MovieSeiyu')(sequelize, DataTypes);
+const MovieGenre = require('./MovieGenre')(sequelize, DataTypes);
+const MovieTheme = require('./MovieTheme')(sequelize, DataTypes);
+const MovieStaff = require('./MovieStaff')(sequelize, DataTypes);
 
 // Definisikan relasi antar model
 // 1. Movie - Genre (Many-to-Many)
