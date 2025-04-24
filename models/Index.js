@@ -1,4 +1,20 @@
-// models/index.js
+
+console.log('[DEBUG] Loading models/index.js');
+console.log('[DEBUG] User model:', User);
+console.log('[DEBUG] Movie model:', Movie);
+console.log('[DEBUG] Genre model:', Genre);
+console.log('[DEBUG] Theme model:', Theme);
+console.log('[DEBUG] Staff model:', Staff);
+console.log('[DEBUG] Seiyu model:', Seiyu);
+console.log('[DEBUG] Karakter model:', Karakter);
+console.log('[DEBUG] MovieSeiyu model:', MovieSeiyu);
+console.log('[DEBUG] MovieGenre model:', MovieGenre);
+console.log('[DEBUG] MovieStaff model:', MovieStaff);
+console.log('[DEBUG] MovieTheme model:', MovieTheme);
+console.log('[DEBUG] sequelize:', sequelize);
+
+
+
 const sequelize = require('../config/sequelize');
 const { DataTypes } = require('sequelize');
 
