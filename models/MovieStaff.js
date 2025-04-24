@@ -2,17 +2,13 @@ module.exports = (sequelize, DataTypes) => {
   const MovieStaff = sequelize.define(
     "movie_staff",
     {
-      movie_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
+      movie_id: { type: DataTypes.INTEGER, primaryKey: true,
         references: {
           model: "movies",
           key: "id"
         }
       },
-      staff_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
+      staff_id: { type: DataTypes.INTEGER, primaryKey: true,
         references: {
           model: "staff",
           key: "id"

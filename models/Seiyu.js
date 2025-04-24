@@ -3,21 +3,13 @@ module.exports = (sequelize, DataTypes) => {
   const Seiyu = sequelize.define(
     "seiyu",
     {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      name: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, },
+      name: { type: DataTypes.STRING(255), allowNull: false,
         validate: {
           notEmpty: { msg: "Nama tidak boleh kosong" },
         },
       },
-      birthday: {
-        type: DataTypes.DATEONLY,
-        allowNull: false,
+      birthday: { type: DataTypes.DATEONLY, allowNull: false,
         validate: {
           isDate: { msg: "Format tanggal tidak valid (YYYY-MM-DD)" },
         },
@@ -37,18 +29,8 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Seiyu.associate = (models) => {
-    Seiyu.belongsToMany(models.Karakter, {
-      through: models.MovieSeiyu,
-      foreignKey: "seiyu_id",
-      otherKey: "karakter_id",
-      as: "karakter"
-    });
-    Seiyu.belongsToMany(models.Movie, {
-      through: models.MovieSeiyu,
-      foreignKey: "seiyu_id",
-      otherKey: "movie_id",
-      as: "film"
-    });
+    Seiyu.belongsToMany(models.Karakter, { through: models.MovieSeiyu, foreignKey: "seiyu_id", otherKey: "karakter_id", as: "karakter" });
+    Seiyu.belongsToMany(models.Movie, { through: models.MovieSeiyu, foreignKey: "seiyu_id", otherKey: "movie_id", as: "movie" });
   };
 
   return Seiyu;

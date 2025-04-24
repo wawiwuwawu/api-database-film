@@ -2,26 +2,15 @@ module.exports = (sequelize, DataTypes) => {
   const Movie = sequelize.define(
     "movie",
     {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
-      },
-      judul: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      judul: { type: DataTypes.STRING(255), allowNull: false,
         validate: {
           notEmpty: { msg: "Judul tidak boleh kosong" },
           len: { args: [2, 255], msg: "Judul harus 2-255 karakter" }
         }
       },
-      sinopsis: {
-        type: DataTypes.TEXT,
-        validate: { notEmpty: { msg: "Sinopsis tidak boleh kosong" } }
-      },
-      tahun_rilis: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
+      sinopsis: { type: DataTypes.TEXT, validate: { notEmpty: { msg: "Sinopsis tidak boleh kosong" } } },
+      tahun_rilis: { type: DataTypes.INTEGER,allowNull: false,
         validate: {
           isYear(value) {
             const currentYear = new Date().getFullYear();
@@ -48,15 +37,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM("G", "PG", "PG-13", "R", "NC-17"),
         allowNull: false
       },
-      cover_url: {
-        type: DataTypes.STRING(255),
-        validate: { isUrl: { msg: "URL cover tidak valid" } }
-      },
+      cover_url: { type: DataTypes.STRING(255), },
       delete_hash: DataTypes.STRING(255),
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: sequelize.literal("CURRENT_TIMESTAMP")
-      }
+      created_at: { type: DataTypes.DATE, defaultValue: sequelize.literal("CURRENT_TIMESTAMP") }
     },
     {
       tableName: "movies",
@@ -78,36 +61,11 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Movie.associate = (models) => {
-    Movie.belongsToMany(models.Genre, {
-      through: "movie_genres",
-      foreignKey: "movie_id",
-      otherKey: "genre_id",
-      as: "genres"
-    });
-    Movie.belongsToMany(models.Staff, {
-      through: "movie_staff",
-      foreignKey: "movie_id",
-      otherKey: "staff_id",
-      as: "staff"
-    });
-    Movie.belongsToMany(models.Theme, {
-      through: "movie_themes",
-      foreignKey: "movie_id",
-      otherKey: "theme_id",
-      as: "themes"
-    });
-    Movie.belongsToMany(models.Seiyu, {
-      through: models.MovieSeiyu,
-      foreignKey: "movie_id",
-      otherKey: "seiyu_id",
-      as: "pengisi_suara"
-    });
-    Movie.belongsToMany(models.Karakter, {
-      through: models.MovieSeiyu,
-      foreignKey: "movie_id",
-      otherKey: "karakter_id",
-      as: "karakter"
-    });
+    Movie.belongsToMany(models.Genre, { through: "movie_genres", foreignKey: "movie_id", otherKey: "genre_id", as: "genres" });
+    Movie.belongsToMany(models.Staff, { through: "movie_staff", foreignKey: "movie_id", otherKey: "staff_id", as: "staff" });
+    Movie.belongsToMany(models.Theme, { through: "movie_themes", foreignKey: "movie_id", otherKey: "theme_id", as: "themes" });
+    Movie.belongsToMany(models.Seiyu, { through: models.MovieSeiyu, foreignKey: "movie_id", otherKey: "seiyu_id", as: "pengisi_suara" });
+    Movie.belongsToMany(models.Karakter, { through: models.MovieSeiyu, foreignKey: "movie_id", otherKey: "karakter_id", as: "karakter" });
   };
 
   return Movie;

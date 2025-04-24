@@ -3,10 +3,7 @@ module.exports = (sequelize, DataTypes) => {
   const Genre = sequelize.define(
     "genre",
     {
-      nama: {
-        type: DataTypes.STRING,
-        allowNull: false
-      }
+      nama: { type: DataTypes.STRING, allowNull: false }
     },
     {
       tableName: "genres",
@@ -15,12 +12,7 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Genre.associate = (models) => {
-    Genre.belongsToMany(models.Movie, {
-      through: models.MovieGenre,
-      foreignKey: "genre_id",
-      otherKey: "movie_id",
-      as: "movies"
-    });
+    Genre.belongsToMany(models.Movie, { through: models.MovieGenre, foreignKey: "genre_id", otherKey: "movie_id", as: "movies" });
   };
 
   return Genre;

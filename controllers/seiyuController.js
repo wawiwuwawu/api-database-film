@@ -1,19 +1,21 @@
-// controllers/seiyuController.js
 const { Movie, Seiyu, Karakter, MovieSeiyu } = require("../models");
 const { sequelize } = require("../models");
+const { validationResult } = require('express-validator');
 const { uploadToImgur, deleteFromImgur } = require('../config/imgur');
 
 
-// Create Seiyu
+
 const createSeiyu = async (req, res) => {
   try {
+    const errors = validationResult(req);
     const { name } = req.body;
 
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, message: "Format salah", errors: errors.array() });
+    }
+
     if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Format file harus JPG/PNG' 
-      });
+      return res.status(400).json({  success: false,  error: 'Format file harus JPG/PNG' });
     }
     
 
@@ -25,10 +27,7 @@ const createSeiyu = async (req, res) => {
     });
 
     if (existing) {
-      return res.status(409).json({ 
-        success: false, 
-        error: "Nama seiyu sudah terdaftar" 
-      });
+      return res.status(409).json({ success: false, error: "Nama seiyu sudah terdaftar" });
     }
 
     let imgurData = {};
@@ -46,10 +45,7 @@ const createSeiyu = async (req, res) => {
 
       await transaction.commit();
 
-      return res.status(201).json({ 
-        success: true, 
-        data: seiyu 
-      });
+      return res.status(201).json({ success: true, data: seiyu });
 
   } catch (error) {
     await transaction.rollback();
@@ -61,40 +57,34 @@ const createSeiyu = async (req, res) => {
     }
 
   } catch (error) {
-    return res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
+    return res.status(500).json({  success: false, error: error.message });
   }
 };
 
-// Get all Seiyus
 const getAllSeiyus = async (req, res) => {
   try {
-    const seiyus = await Seiyu.findAll();
+    const seiyus = await Seiyu.findAll({
+      include: [
+        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakter" },
+        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "pengisi_suara" }
+      ],
+      order: [['created_at', 'DESC']]
+    });
     return res.status(200).json({ success: true, data: seiyus });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// Get Seiyu by ID with characters and movies
 const getSeiyuById = async (req, res) => {
   try {
     const { id } = req.params;
     const seiyu = await Seiyu.findByPk(id, {
       include: [
-        {
-          model: Karakter,
-          through: { model: MovieSeiyu, attributes: [] },
-          as: "karakter"
-        },
-        {
-          model: Movie,
-          through: { model: MovieSeiyu, attributes: [] },
-          as: "pengisi_suara"
-        }
-      ]
+        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakter" },
+        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "pengisi_suara" }
+      ],
+      order: [['created_at', 'DESC']]
     });
     if (!seiyu) {
       return res.status(404).json({ success: false, message: "Seiyu tidak ditemukan" });
@@ -105,21 +95,28 @@ const getSeiyuById = async (req, res) => {
   }
 };
 
-// Update Seiyu
+
 const updateSeiyu = async (req, res) => {
   const transaction = await sequelize.transaction();
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, message: "Format salah", errors: errors.array() });
+  }
+  
+  if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
+    return res.status(400).json({ success: false, error: 'Format file harus JPG/PNG' });
+  }
+
+
   try {
     const seiyu = await Seiyu.findByPk(req.params.id, { transaction });
     
     if (!seiyu) {
       await transaction.rollback();
-      return res.status(404).json({ 
-        success: false, 
-        error: "Seiyu tidak ditemukan" 
-      });
+      return res.status(404).json({ success: false, error: "Seiyu tidak ditemukan" });
     }
 
-    // Validasi nama
     if (req.body.name && req.body.name !== seiyu.name) {
       const exists = await Seiyu.findOne({
         where: sequelize.where(
@@ -131,57 +128,42 @@ const updateSeiyu = async (req, res) => {
       
       if (exists) {
         await transaction.rollback();
-        return res.status(409).json({ 
-          success: false, 
-          error: "Nama seiyu sudah terdaftar" 
-        });
+        return res.status(409).json({  success: false,  error: "Nama seiyu sudah terdaftar"  });
       }
     }
 
-    // Handle gambar
-    let newImgurData = {};
+    let ImgurData = {};
     if (req.file) {
       try {
-        // Delete old image
         if (seiyu.delete_hash) {
           await deleteFromImgur(seiyu.delete_hash);
         }
         
-        // Upload new
-        newImgurData = await uploadToImgur(req.file);
+
+        imgurData = await uploadToImgur({ buffer: req.file.buffer });
       
       } catch (error) {
         await transaction.rollback();
-        return res.status(500).json({ 
-          success: false, 
-          error: `Gagal update gambar: ${error.message}` 
-        });
+        return res.status(500).json({ success: false, error: `Gagal update gambar: ${error.message}` });
       }
     }
 
-    // Update data
+
     await seiyu.update({
       ...req.body,
-      ...newImgurData
+      ...ImgurData
     }, { transaction });
 
     await transaction.commit();
     
-    return res.status(200).json({ 
-      success: true, 
-      data: seiyu 
-    });
-
+    return res.status(200).json({ success: true, data: seiyu });
   } catch (error) {
     await transaction.rollback();
-    return res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// Delete Seiyu
+
 const deleteSeiyu = async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,11 +172,9 @@ const deleteSeiyu = async (req, res) => {
       return res.status(404).json({ success: false, message: "Seiyu tidak ditemukan" });
     }
 
-    if (seiyu.delete_hash) {
-      await deleteFromImgur(seiyu.delete_hash);
-    }
-
-    await seiyu.destroy();
+    if (seiyu.delete_hash) await deleteFromImgur(seiyu.delete_hash);
+    await seiyu.destroy({ transaction });
+    await transaction.commit();
     return res.status(200).json({ success: true, message: "Seiyu berhasil dihapus" });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });

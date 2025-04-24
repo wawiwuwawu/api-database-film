@@ -2,14 +2,14 @@
 const express = require('express');
 const router = express.Router();
 const {
+  createKarakter,
   getAllKarakter,
   getKarakterDetail
 } = require('../controllers/karakterController');
 
-// GET: Ambil semua karakter
-router.get('/', getAllKarakter);
 
-// GET: Ambil detail karakter berdasarkan ID, termasuk movies dan seiyu
+router.post('/upKarakter', upload.single('image'), createKarakter);
+router.get('/', getAllKarakter);
 router.get('/:id', getKarakterDetail);
 
 module.exports = router;

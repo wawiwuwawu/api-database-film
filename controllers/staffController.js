@@ -1,34 +1,52 @@
-const { Staff } = require("../models");
+const { Staff, Movie, MovieStaff } = require("../models");
+const { sequelize } = require("../models");
 const { uploadToImgur, deleteFromImgur } = require('../config/imgur');
 
 const createStaff = async (req, res) => {
   try {
-    // Cek duplikasi nama
-    const existingStaff = await Staff.findOne({ where: { nama: req.body.nama } });
-    if (existingStaff) {
-      return res.status(409).json({ 
-        success: false,
-        error: "Nama staff sudah terdaftar",
-      });
+    const { nama } = req.body;
+
+    if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
+      return res.status(400).json({ success: false, error: 'Format file harus JPG/PNG' });
     }
 
-    let coverData = {};
-    if (req.file) {
-      const imgurResponse = await uploadToImgur(req.file);
-      coverData = {
-        cover_url: imgurResponse.url,
-        delete_hash: imgurResponse.deleteHash,
-      };
+    const existing = await Staff.findOne({
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('nama')),
+        sequelize.fn('LOWER', nama)
+      )
+    });
+
+    if (existing) {
+      return res.status(409).json({ success: false, error: "Nama staff sudah terdaftar" });
     }
 
-    const staff = await Staff.create(
-      {
+    let imgurData = {};
+    const transaction = await sequelize.transaction();
+
+    try {
+      if (req.file) {
+        imgurData = await uploadToImgur({ buffer: req.file.buffer });
+      }
+
+      const seiyu = await Staff.create({
         ...req.body,
-        ...coverData,
-      },
-      { transaction }
-    );
-    res.status(201).json({ success: true, data: staff });
+        ...imgurData
+      }, { transaction });
+
+      await transaction.commit();
+
+      return res.status(201).json({ success: true, data: staff });
+
+    } catch (error) {
+      await transaction.rollback();
+      if (imgurData.deleteHash) {
+        await deleteFromImgur(imgurData.deleteHash);
+      }
+
+      throw error;
+    }
+
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -36,25 +54,33 @@ const createStaff = async (req, res) => {
 
 const getAllStaff = async (req, res) => {
   try {
-    const staffList = await Staff.findAll();
-    res.json({ success: true, data: staffList });
+    const staff = await Staff.findAll({
+      include: [
+        { model: Movie, through: { model: MovieStaff, attributes: [] }, as: 'staff' },
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    return res.status(200).json({ success: true, data: staff });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
 
 const getStaffById = async (req, res) => {
   try {
-    const staff = await Staff.findByPk(req.params.id);
+    const { id } = req.params;
+    const staff = await Staff.findByPk(id, {
+      include: [
+        { model: Movie, through: { model: MovieStaff, attributes: [] }, as: 'staff' },
+      ],
+      order: [['createdAt', 'DESC']]
+    });
     if (!staff) {
-      return res.status(404).json({ 
-        success: false,
-        error: "Staff tidak ditemukan",
-      });
+      return res.status(404).json({ success: false, error: "Staff tidak ditemukan" });
     }
-    res.json({ success: true, data: staff });
+    return res.status(200).json({ success: true, data: staff });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -62,52 +88,76 @@ const updateStaff = async (req, res) => {
   try {
     const staff = await Staff.findByPk(req.params.id);
     if (!staff) {
-      return res.status(404).json({ 
-        success: false,
-        error: "Staff tidak ditemukan",
-      });
+      return res.status(404).json({ success: false, error: "Staff tidak ditemukan", });
     }
 
-    // Cek duplikasi nama jika diubah
     if (req.body.nama && req.body.nama !== staff.nama) {
-      const existingStaff = await Staff.findOne({ where: { nama: req.body.nama } });
-      if (existingStaff) {
-        return res.status(409).json({ 
-          success: false,
-          error: "Nama staff sudah terdaftar",
-        });
+      const exists = await Staff.findOne({
+        where: sequelize.where(
+          sequelize.fn('LOWER', sequelize.col('nama')),
+          sequelize.fn('LOWER', req.body.nama)
+        ),
+        transaction
+      });
+
+      if (exists) {
+        return res.status(409).json({ success: false, error: "Nama staff sudah terdaftar", });
       }
     }
 
-    if (req.file) {
-      const imgurResponse = await uploadToImgur(req.file);
-      req.body.cover_url = imgurResponse.url;
-      req.body.delete_hash = imgurResponse.deleteHash;
+    let imgurData = {};
+    if (staff.delete_hash) {
+      await deleteFromImgur(staff.delete_hash);
     }
 
-    await staff.update(req.body);
-    res.json({ success: true, data: staff });
+    try {
+      if (req.file) {
+        if (['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
+          imgurData = await uploadToImgur({ buffer: req.file.buffer });
+        } else {
+          return res.status(400).json({ success: false, error: 'Format file harus JPG/PNG' });
+        }
+      }
+
+      const staff = await Staff.update({
+        ...req.body,
+        ...imgurData
+      }, {
+        where: { id: req.params.id }
+      })
+
+      await transaction.commit();
+
+      return res.status(200).json({ success: true, data: staff });
+
+    } catch (error) {
+      await transaction.rollback();
+      if (imgurData.deleteHash) {
+        await deleteFromImgur(imgurData.deleteHash);
+      }
+      throw error;
+    }
+
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 };
 
+
 const deleteStaff = async (req, res) => {
   try {
-    const staff = await Staff.findByPk(req.params.id);
+    const { id } = req.params;
+    const staff = await Staff.findByPk(id);
     if (!staff) {
-      return res.status(404).json({ 
-        success: false,
-        error: "Staff tidak ditemukan",
-      });
+      return res.status(404).json({ success: false, error: "Staff tidak ditemukan" });
     }
 
-    if (movie.delete_hash) {
-      await deleteFromImgur(movie.delete_hash);
+    if (staff.delete_hash) {
+      await deleteFromImgur(staff.delete_hash);
     }
 
-    await staff.destroy();
-    res.json({ success: true, message: "Staff berhasil dihapus" });
+    await Staff.destroy({ where: { id } });
+    return res.status(200).json({ success: true, message: "Staff berhasil dihapus" });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

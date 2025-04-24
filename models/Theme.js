@@ -1,4 +1,3 @@
-// models/Theme.js
 module.exports = (sequelize, DataTypes) => {
   const Theme = sequelize.define(
     "theme",
@@ -12,12 +11,7 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Theme.associate = (models) => {
-    Theme.belongsToMany(models.Movie, {
-      through: models.MovieTheme,
-      foreignKey: "theme_id",
-      otherKey: "movie_id",
-      as: "movies"
-    });
+    Theme.belongsToMany(models.Movie, { through: models.MovieTheme, foreignKey: "theme_id", otherKey: "movie_id", as: "movies" });
   };
 
   return Theme;
