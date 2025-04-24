@@ -179,19 +179,40 @@ const updateSeiyu = async (req, res) => {
 
 
 const deleteSeiyu = async (req, res) => {
+  const { sequence } = Seiyu;
+  let transaction;
+  
   try {
-    const { id } = req.params;
-    const seiyu = await Seiyu.findByPk(id);
-    if (!seiyu) {
-      return res.status(404).json({ success: false, message: "Seiyu tidak ditemukan" });
+      const { id } = req.params;
+
+      transaction = await sequelize.transaction();
+
+      const seiyu = await Seiyu.findByPk(id, { transaction });
+
+      if (!seiyu) {
+        await transaction.rollback();
+        return res.status(404).json({ success: false, error: "Seiyu tidak ditemukan" });
+      }
+
+      if (seiyu.delete_hash) {
+        try {
+        await deleteFromImgur(seiyu.delete_hash);
+      } catch (imgurError) {
+        await transaction.rollback();
+        return res.status(500).json({ success: false, error: "Gagal menghapus gambar", details: imgurError.message });
+      }
     }
 
-    if (seiyu.delete_hash) await deleteFromImgur(seiyu.delete_hash);
-    await seiyu.destroy({ transaction });
-    await transaction.commit();
-    return res.status(200).json({ success: true, message: "Seiyu berhasil dihapus" });
+      await seiyu.destroy({ transaction });
+
+      await transaction.commit();
+
+      return res.status(200).json({ success: true, message: "Seiyu berhasil dihapus" });
   } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+      if (transaction) {
+        await transaction.rollback();
+      }
+      return res.status(500).json({ success: false, error: error.message });
   }
 };
 
