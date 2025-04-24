@@ -24,7 +24,7 @@ module.exports = {
       ]);
   
       // Seed themes
-      await queryInterface.bulkInsert("themes", [
+      await queryInterface.bulkInsert("theme", [
         { nama: "Adult Cast" },
         { nama: "Anthropomorphic" },
         { nama: "CGDCT" },
@@ -82,7 +82,7 @@ module.exports = {
   
     down: async (queryInterface) => {
       await queryInterface.bulkDelete("genres", null, {});
-      await queryInterface.bulkDelete("themes", null, {});
+      await queryInterface.bulkDelete("theme", null, {});
     },
   };
 
