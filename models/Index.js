@@ -16,14 +16,14 @@ const MovieTheme = require('./MovieTheme')(sequelize, DataTypes);
 const MovieStaff = require('./MovieStaff')(sequelize, DataTypes);
 
 
-Movie.belongsToMany(Genre, { through: 'movie_genre', foreignKey: 'movie_id', otherKey: 'genre_id', as: 'genres' });
-Genre.belongsToMany(Movie, { through: 'movie_genre', foreignKey: 'genre_id', otherKey: 'movie_id', as: 'movies' });
-Movie.belongsToMany(Theme, { through: 'movie_themes', foreignKey: 'movie_id', otherKey: 'theme_id', as: 'themes' });
-Theme.belongsToMany(Movie, { through: 'movie_themes', foreignKey: 'theme_id', otherKey: 'movie_id', as: 'movies' });
-Movie.belongsToMany(Staff, { through: 'movie_staff', foreignKey: 'movie_id', otherKey: 'staff_id', as: 'staff' });
-Staff.belongsToMany(Movie, { through: 'movie_staff', foreignKey: 'staff_id', otherKey: 'movie_id', as: 'movies' });
-Movie.belongsToMany(Seiyu, { through: MovieSeiyu, foreignKey: 'movie_id', otherKey: 'seiyu_id', as: 'pengisi_suara' });
-Seiyu.belongsToMany(Movie, { through: MovieSeiyu, foreignKey: 'seiyu_id', otherKey: 'movie_id', as: 'film' });
+Movie.belongsToMany(Genre, { through: MovieGenre, foreignKey: 'movie_id', otherKey: 'genre_id', as: 'genres' });
+Genre.belongsToMany(Movie, { through: MovieGenre, foreignKey: 'genre_id', otherKey: 'movie_id', as: 'movies' });
+Movie.belongsToMany(Theme, { through: MovieTheme, foreignKey: 'movie_id', otherKey: 'theme_id', as: 'themes' });
+Theme.belongsToMany(Movie, { through: MovieTheme, foreignKey: 'theme_id', otherKey: 'movie_id', as: 'movies' });
+Movie.belongsToMany(Staff, { through: MovieStaff, foreignKey: 'movie_id', otherKey: 'staff_id', as: 'staff' });
+Staff.belongsToMany(Movie, { through: MovieStaff, foreignKey: 'staff_id', otherKey: 'movie_id', as: 'movies' });
+Movie.belongsToMany(Seiyu, { through: MovieSeiyu, foreignKey: 'movie_id', otherKey: 'seiyu_id', as: 'seiyu' });
+Seiyu.belongsToMany(Movie, { through: MovieSeiyu, foreignKey: 'seiyu_id', otherKey: 'movie_id', as: 'movie' });
 Karakter.belongsToMany(Movie, { through: MovieSeiyu, foreignKey: 'karakter_id', otherKey: 'movie_id', as: 'movies' });
 Movie.belongsToMany(Karakter, { through: MovieSeiyu, foreignKey: 'movie_id', otherKey: 'karakter_id', as: 'karakter' });
 
