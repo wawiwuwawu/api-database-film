@@ -15,7 +15,7 @@ const MovieGenre = require('./MovieGenre')(sequelize, DataTypes);
 const MovieTheme = require('./MovieTheme')(sequelize, DataTypes);
 const MovieStaff = require('./MovieStaff')(sequelize, DataTypes);
 
-// Definisikan relasi antar model
+// Definisikan relasi antar modelf
 // 1. Movie - Genre (Many-to-Many)
 Movie.belongsToMany(Genre, {
   through: 'movie_genres',
