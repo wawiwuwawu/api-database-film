@@ -13,24 +13,18 @@ const {
 const {
   createSeiyu,
   getAllSeiyus,
+  getAllSeiyusKarakter,
   getSeiyuById,
   updateSeiyu,
   deleteSeiyu
 } = require("../controllers/seiyuController");
 
-// POST   /api/seiyu/         → createSeiyu
+
 router.post("/", upload.single('file'), seiyuValidationRules, createSeiyu);
-
-// GET    /api/seiyu/         → getAllSeiyus
 router.get("/", getAllSeiyus);
-
-// GET    /api/seiyu/:id      → getSeiyuById (dengan relasi karakter & movie)
+router.get("/karakter", getAllSeiyusKarakter);
 router.get("/:id", getSeiyuById);
-
-// PUT    /api/seiyu/:id      → updateSeiyu
 router.put("/:id", upload.single('file'), seiyuUpdateValidationRules, updateSeiyu);
-
-// DELETE /api/seiyu/:id      → deleteSeiyus
 router.delete("/:id", deleteSeiyu);
 
 module.exports = router;

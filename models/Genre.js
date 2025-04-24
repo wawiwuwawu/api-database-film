@@ -1,4 +1,3 @@
-// models/Genre.js
 module.exports = (sequelize, DataTypes) => {
   const Genre = sequelize.define(
     "genre",

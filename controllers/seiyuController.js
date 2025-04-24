@@ -2,6 +2,7 @@ const { Movie, Seiyu, Karakter, MovieSeiyu } = require("../models");
 const { sequelize } = require("../models");
 const { validationResult } = require('express-validator');
 const { uploadToImgur, deleteFromImgur } = require('../config/imgur');
+const { get } = require("../routes/userRoutes");
 
 
 
@@ -62,6 +63,14 @@ const createSeiyu = async (req, res) => {
 };
 
 const getAllSeiyus = async (req, res) => {
+  const seiyus = await Seiyu.findAll();
+
+  if (seiyus.length === 0) {
+    return res.json({ success: true, data: [], message: "Belum ada seiyu tersimpan" });
+  }
+}
+
+const getAllSeiyusKarakter = async (req, res) => {
   try {
     const seiyus = await Seiyu.findAll({
       include: [
@@ -184,6 +193,7 @@ const deleteSeiyu = async (req, res) => {
 module.exports = {
   createSeiyu,
   getAllSeiyus,
+  getAllSeiyusKarakter,
   getSeiyuById,
   updateSeiyu,
   deleteSeiyu
