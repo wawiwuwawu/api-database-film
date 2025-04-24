@@ -1,7 +1,7 @@
-const imgur = require('imgur');
-const fs = require('fs');
-const path = require('path');
-const multer = require('multer');
+import imgur from 'imgur';
+// const fs = require('fs');
+// const path = require('path');
+// const multer = require('multer');
 
 
 // Inisialisasi client Imgur
@@ -82,44 +82,41 @@ const multer = require('multer');
 imgur.setClientId('de3f65c7fcf374a');
 
 
-async function uploadToImgur(file) {
-  console.log('Received file object:', file);
-  if (!file?.path) {
-    throw new Error('File tidak valid');
+export async function uploadToImgur({ buffer, filePath }) {
+  if (buffer) {
+    const base64 = buffer.toString('base64');
+    const res = await imgur.uploadBase64(base64);
+    return { 
+      profile_url: res.link.replace(/^http:\/\//i,'https://'), 
+      delete_hash: res.deletehash };
   }
-
-  try {
-    
-    const response = await imgur.uploadFile(file.path);
-
-    // Hapus file lokal setelah upload
-    fs.unlinkSync(file.path);
-
-    return {
-      url: response.link.replace(/^http:\/\//i, 'https://'),
-      deleteHash: response.deletehash
+  if (filePath) {
+    const res = await imgur.uploadFile(filePath);
+    return { 
+      profile_url: res.link.replace(/^http:\/\//i,'https://'), 
+      delete_hash: res.deletehash 
     };
-  } catch (error) {
-    // Hapus file lokal jika upload gagal
-    if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-    console.error('[IMGUR UPLOAD ERROR]', error.message);
-    throw new Error(`Gagal upload ke Imgur: ${error.message}`);
   }
+  throw new Error('Must provide buffer or filePath');
 }
 
-async function deleteFromImgur(deleteHash) {
-  if (!deleteHash) return false;
-  try {
-    // deleteImage menerima deleteHash langsung
-    await imgur.deleteImage(deleteHash);
-    return true;
-  } catch (error) {
-    console.error('[IMGUR DELETE ERROR]', error.message);
-    return false;
-  }
+export async function deleteFromImgur(deleteHash) {
+  await imgur.deleteImage(deleteHash);
 }
 
-module.exports = {
+// async function deleteFromImgur(deleteHash) {
+//   if (!deleteHash) return false;
+//   try {
+//     // deleteImage menerima deleteHash langsung
+//     await imgur.deleteImage(deleteHash);
+//     return true;
+//   } catch (error) {
+//     console.error('[IMGUR DELETE ERROR]', error.message);
+//     return false;
+//   }
+// }
+
+export default {
   uploadToImgur,
   deleteFromImgur
 };

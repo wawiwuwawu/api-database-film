@@ -27,10 +27,7 @@ module.exports = (sequelize, DataTypes) => {
       instagram_url: DataTypes.STRING(255),
       twitter_url: DataTypes.STRING(255),
       youtube_url: DataTypes.STRING(255),
-      profile_url: {
-        type: DataTypes.STRING(255),
-        validate: { isURL: { msg: "URL profil tidak valid" } },
-      },
+      profile_url: DataTypes.STRING(255),
       delete_hash: DataTypes.STRING(255),
     },
     {

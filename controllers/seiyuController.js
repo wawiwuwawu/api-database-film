@@ -15,6 +15,7 @@ const createSeiyu = async (req, res) => {
         error: 'Format file harus JPG/PNG' 
       });
     }
+    
 
     const existing = await Seiyu.findOne({
       where: sequelize.where(
@@ -35,7 +36,7 @@ const createSeiyu = async (req, res) => {
     
     try {
       if (req.file) {
-        imgurData = await uploadToImgur(req.file);
+        imgurData = await uploadToImgur({ buffer: req.file.buffer });
       }
 
       const seiyu = await Seiyu.create({
