@@ -63,12 +63,17 @@ const createSeiyu = async (req, res) => {
 };
 
 const getAllSeiyus = async (req, res) => {
-  const seiyus = await Seiyu.findAll();
+  try {
+    const seiyus = await Seiyu.findAll();
 
-  if (seiyus.length === 0) {
-    return res.json({ success: true, data: [], message: "Belum ada seiyu tersimpan" });
-  }
+    if (seiyus.length === 0) {
+      return res.json({ success: true, data: [], message: "Belum ada seiyu tersimpan" });
+    }
+    return res.status(200).json({ success: true, data: seiyus });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
 }
+};
 
 const getAllSeiyusKarakter = async (req, res) => {
   try {
