@@ -1,27 +1,27 @@
 module.exports = {
     up: async (queryInterface) => {
       // Seed genres
-      await queryInterface.bulkInsert("genres", [
-        { nama: "Action" },
-        { nama: "Adventure" },
-        { nama: "Avant Garde" },
-        { nama: "Award Winning" },
-        { nama: "Boys Love" },
-        { nama: "Comedy" },
-        { nama: "Drama" },
-        { nama: "Fantasy" },
-        { nama: "Girls Love" },
-        { nama: "Gourmet" },
-        { nama: "Horror" },
-        { nama: "Mystery" },
-        { nama: "Romance" },
-        { nama: "Sci-Fi" },
-        { nama: "Slice of Life" },
-        { nama: "Sports" },
-        { nama: "Supernatural" },
-        { nama: "Suspense" },
-        { nama: "Echi" },
-      ]);
+      // await queryInterface.bulkInsert("genres", [
+      //   { nama: "Action" },
+      //   { nama: "Adventure" },
+      //   { nama: "Avant Garde" },
+      //   { nama: "Award Winning" },
+      //   { nama: "Boys Love" },
+      //   { nama: "Comedy" },
+      //   { nama: "Drama" },
+      //   { nama: "Fantasy" },
+      //   { nama: "Girls Love" },
+      //   { nama: "Gourmet" },
+      //   { nama: "Horror" },
+      //   { nama: "Mystery" },
+      //   { nama: "Romance" },
+      //   { nama: "Sci-Fi" },
+      //   { nama: "Slice of Life" },
+      //   { nama: "Sports" },
+      //   { nama: "Supernatural" },
+      //   { nama: "Suspense" },
+      //   { nama: "Echi" },
+      // ]);
   
       // Seed themes
       await queryInterface.bulkInsert("theme", [
@@ -81,7 +81,7 @@ module.exports = {
     },
   
     down: async (queryInterface) => {
-      await queryInterface.bulkDelete("genres", null, {});
+      // await queryInterface.bulkDelete("genres", null, {});
       await queryInterface.bulkDelete("theme", null, {});
     },
   };
