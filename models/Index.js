@@ -16,8 +16,8 @@ const MovieTheme = require('./MovieTheme')(sequelize, DataTypes);
 const MovieStaff = require('./MovieStaff')(sequelize, DataTypes);
 
 
-Movie.belongsToMany(Genre, { through: 'movie_genres', foreignKey: 'movie_id', otherKey: 'genre_id', as: 'genres' });
-Genre.belongsToMany(Movie, { through: 'movie_genres', foreignKey: 'genre_id', otherKey: 'movie_id', as: 'movies' });
+Movie.belongsToMany(Genre, { through: 'movie_genre', foreignKey: 'movie_id', otherKey: 'genre_id', as: 'genres' });
+Genre.belongsToMany(Movie, { through: 'movie_genre', foreignKey: 'genre_id', otherKey: 'movie_id', as: 'movies' });
 Movie.belongsToMany(Theme, { through: 'movie_themes', foreignKey: 'movie_id', otherKey: 'theme_id', as: 'themes' });
 Theme.belongsToMany(Movie, { through: 'movie_themes', foreignKey: 'theme_id', otherKey: 'movie_id', as: 'movies' });
 Movie.belongsToMany(Staff, { through: 'movie_staff', foreignKey: 'movie_id', otherKey: 'staff_id', as: 'staff' });
