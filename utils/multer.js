@@ -6,7 +6,7 @@ const multer = require('multer');
 
 
 const upload = multer({ 
-    dest: 'uploads/' // Folder sementara untuk simpan file sebelum diupload ke GDrive
+    dest: 'uploads/'
   });
 
   module.exports = upload;

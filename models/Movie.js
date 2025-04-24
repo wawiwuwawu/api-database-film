@@ -1,24 +1,114 @@
-// File: models/Movie.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+module.exports = (sequelize, DataTypes) => {
+  const Movie = sequelize.define(
+    "movie",
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
+      judul: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+        validate: {
+          notEmpty: { msg: "Judul tidak boleh kosong" },
+          len: { args: [2, 255], msg: "Judul harus 2-255 karakter" }
+        }
+      },
+      sinopsis: {
+        type: DataTypes.TEXT,
+        validate: { notEmpty: { msg: "Sinopsis tidak boleh kosong" } }
+      },
+      tahun_rilis: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          isYear(value) {
+            const currentYear = new Date().getFullYear();
+            if (value < 1900 || value > currentYear + 2) {
+              throw new Error(`Tahun rilis harus 1900-${currentYear + 2}`);
+            }
+          }
+        }
+      },
+      type: {
+        type: DataTypes.ENUM("TV", "Movie", "ONA", "OVA"),
+        allowNull: false,
+        validate: { notEmpty: { msg: "Tipe film harus diisi" } }
+      },
+      episode: {
+        type: DataTypes.INTEGER,
+        validate: { min: { args: [1], msg: "Episode minimal 1" } }
+      },
+      durasi: {
+        type: DataTypes.INTEGER,
+        validate: { min: { args: [1], msg: "Durasi minimal 1 menit" } }
+      },
+      rating: {
+        type: DataTypes.ENUM("G", "PG", "PG-13", "R", "NC-17"),
+        allowNull: false
+      },
+      cover_url: {
+        type: DataTypes.STRING(255),
+        validate: { isUrl: { msg: "URL cover tidak valid" } }
+      },
+      delete_hash: DataTypes.STRING(255),
+      created_at: {
+        type: DataTypes.DATE,
+        defaultValue: sequelize.literal("CURRENT_TIMESTAMP")
+      }
+    },
+    {
+      tableName: "movies",
+      timestamps: false,
+      underscored: true,
+      paranoid: false,
+      hooks: {
+        beforeValidate: (movie) => {
+          if (movie.tahun_rilis) {
+            movie.tahun_rilis = parseInt(movie.tahun_rilis);
+          }
+        }
+      },
+      indexes: [
+        { name: "unique_judul", fields: ["judul"], unique: true },
+        { name: "index_tahun_rilis", fields: ["tahun_rilis"] }
+      ]
+    }
+  );
 
-const Movie = sequelize.define('movies', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  judul: DataTypes.STRING,
-  sinopsis: DataTypes.TEXT,
-  tahun_rilis: DataTypes.INTEGER,
-  type: DataTypes.ENUM('TV', 'Movie', 'ONA', 'OVA'),
-  episode: DataTypes.INTEGER,
-  durasi: DataTypes.INTEGER,
-  rating: DataTypes.ENUM('G', 'PG', 'PG-13', 'R', 'NC-17'),
-  cover_url: DataTypes.STRING,
-  created_at: DataTypes.DATE
-}, {
-  timestamps: false
-});
+  Movie.associate = (models) => {
+    Movie.belongsToMany(models.Genre, {
+      through: "movie_genres",
+      foreignKey: "movie_id",
+      otherKey: "genre_id",
+      as: "genres"
+    });
+    Movie.belongsToMany(models.Staff, {
+      through: "movie_staff",
+      foreignKey: "movie_id",
+      otherKey: "staff_id",
+      as: "staff"
+    });
+    Movie.belongsToMany(models.Theme, {
+      through: "movie_themes",
+      foreignKey: "movie_id",
+      otherKey: "theme_id",
+      as: "themes"
+    });
+    Movie.belongsToMany(models.Seiyu, {
+      through: models.MovieSeiyu,
+      foreignKey: "movie_id",
+      otherKey: "seiyu_id",
+      as: "pengisi_suara"
+    });
+    Movie.belongsToMany(models.Karakter, {
+      through: models.MovieSeiyu,
+      foreignKey: "movie_id",
+      otherKey: "karakter_id",
+      as: "karakter"
+    });
+  };
 
-module.exports = Movie;
+  return Movie;
+};

@@ -1,20 +1,24 @@
-// File: models/Theme.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+// models/Theme.js
+module.exports = (sequelize, DataTypes) => {
+  const Theme = sequelize.define(
+    "theme",
+    {
+      nama: DataTypes.STRING
+    },
+    {
+      tableName: "theme",
+      timestamps: false
+    }
+  );
 
-const Theme = sequelize.define('themes', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  nama: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-    unique: true
-  }
-}, {
-  timestamps: false
-});
+  Theme.associate = (models) => {
+    Theme.belongsToMany(models.Movie, {
+      through: models.MovieTheme,
+      foreignKey: "theme_id",
+      otherKey: "movie_id",
+      as: "movies"
+    });
+  };
 
-module.exports = Theme;
+  return Theme;
+};

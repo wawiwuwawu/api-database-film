@@ -1,0 +1,35 @@
+module.exports = (sequelize, DataTypes) => {
+  const MovieStaff = sequelize.define(
+    "movie_staff",
+    {
+      movie_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        references: {
+          model: "movies",
+          key: "id"
+        }
+      },
+      staff_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        references: {
+          model: "staff",
+          key: "id"
+        }
+      },
+    },
+    {
+      tableName: "movie_staff",
+      timestamps: false,
+      underscored: true
+    }
+  );
+
+  MovieStaff.associate = (models) => {
+    MovieStaff.belongsTo(models.Movie, { foreignKey: "movie_id", as: "movie" });
+    MovieStaff.belongsTo(models.Staff, { foreignKey: "staff_id", as: "staff" });
+  };
+
+  return MovieStaff;
+}
