@@ -9,6 +9,7 @@ const sequelize = require('./config/sequelize');
 
 
 const userRoutes = require('./routes/userRoutes');
+const karakterRoutes = require('./routes/karakterRoutes');
 const movieRoutes = require('./routes/movieRoutes');
 const seiyuRoutes = require('./routes/seiyuRoutes');
 const staffRoutes = require('./routes/staffRoutes');
@@ -22,6 +23,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', userRoutes);
+app.use('/api/karakter', karakterRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/seiyus', seiyuRoutes);
 app.use('/api/staffs', staffRoutes);
