@@ -4,6 +4,8 @@ const {
   createStaffValidationRules,
   updateStaffValidationRules 
 } = require("../middlewares/validation");
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 const {
   createStaff,
   getAllStaff,
@@ -12,19 +14,11 @@ const {
   deleteStaff
 } = require('../controllers/staffController');
 
-// POST: Create staff
-router.post("/", createStaffValidationRules, createStaff);
 
-// GET: Get all staff
+router.post("/", upload.single('file'), createStaffValidationRules, createStaff);
 router.get("/", getAllStaff);
-
-// GET: Get staff by ID
 router.get("/:id", getStaffById);
-
-// PUT: Update staff by ID
-router.put("/:id", updateStaffValidationRules, updateStaff);
-
-// DELETE: Delete staff by ID
+router.put("/:id", upload.single('file'), updateStaffValidationRules, updateStaff);
 router.delete("/:id", deleteStaff);
 
 module.exports = router;

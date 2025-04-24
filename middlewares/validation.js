@@ -1,7 +1,6 @@
 const { body, param } = require("express-validator");
 
 
-
 const movieValidationRules = [
   body("judul").trim().notEmpty().withMessage("Judul tidak boleh kosong"),
   body("sinopsis").trim().notEmpty().withMessage("Sinopsis tidak boleh kosong"),
@@ -63,7 +62,7 @@ const movieUpdateValidationRules = [
         .withMessage("Rating tidak valid"),
 ]
 
-// Validasi untuk CREATE seiyu
+
 const seiyuValidationRules = [
   body("name").trim().notEmpty().withMessage("Nama tidak boleh kosong"),
   body("birthday")
@@ -77,7 +76,7 @@ const seiyuValidationRules = [
   body("youtube_url").optional().isURL().withMessage("URL YouTube tidak valid"),
 ];
 
-// Validasi untuk UPDATE seiyu
+
 const seiyuUpdateValidationRules = [
   param("id").isInt().withMessage("ID harus angka"),
   body("name").optional().trim().notEmpty().withMessage("Nama tidak boleh kosong"),
@@ -88,7 +87,7 @@ const seiyuUpdateValidationRules = [
   body("youtube_url").optional().isURL(),
 ];
 
-// Validasi untuk CREATE staff
+
 const createStaffValidationRules = [
   body("name").trim().notEmpty().withMessage("Nama tidak boleh kosong"),
   body("birthday")
@@ -103,7 +102,6 @@ const createStaffValidationRules = [
     .withMessage("Role harus Director, Producer, atau Staff"),
 ];
 
-// Validasi untuk UPDATE staff
 const updateStaffValidationRules = [
   param("id").isInt().withMessage("ID harus angka"),
   body("name").optional().trim().notEmpty().withMessage("Nama tidak boleh kosong"),
