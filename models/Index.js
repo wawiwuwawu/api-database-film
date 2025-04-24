@@ -3,17 +3,23 @@ const sequelize = require('../config/sequelize');
 const { DataTypes } = require('sequelize');
 
 // Import semua model
-const User = require('./User')(sequelize, DataTypes);
-const Movie = require('./Movie')(sequelize, DataTypes);
-const Genre = require('./Genre')(sequelize, DataTypes);
-const Theme = require('./Theme')(sequelize, DataTypes);
-const Staff = require('./Staff')(sequelize, DataTypes);
-const Seiyu = require('./Seiyu')(sequelize, DataTypes);
-const Karakter = require('./Karakter')(sequelize, DataTypes);
-const MovieSeiyu = require('./MovieSeiyu')(sequelize, DataTypes);
-const MovieGenre = require('./MovieGenre')(sequelize, DataTypes);
-const MovieTheme = require('./MovieTheme')(sequelize, DataTypes);
-const MovieStaff = require('./MovieStaff')(sequelize, DataTypes);
+const modelDefiners = [
+  require('./User'),
+  require('./Movie'),
+  require('./Genre'),
+  require('./Theme'),
+  require('./Staff'),
+  require('./Seiyu'),
+  require('./Karakter'),
+  require('./MovieSeiyu'),
+  require('./MovieGenre'),
+  require('./MovieTheme'),
+  require('./MovieStaff')
+];
+
+modelDefiners.forEach(definer => definer(sequelize, DataTypes));
+
+const { User, Movie, Genre, Theme, Staff, Seiyu, Karakter, MovieSeiyu, MovieGenre, MovieStaff, MovieTheme } = sequelize.models;
 
 // Definisikan relasi antar model
 // 1. Movie - Genre (Many-to-Many)
@@ -85,15 +91,7 @@ Movie.belongsToMany(Karakter, {
   as: 'karakter'
 });
 
-// // 5. User - Review (One-to-Many)
-// User.hasMany(Review, {
-//   foreignKey: 'user_id',
-//   as: 'reviews'
-// });
-// Review.belongsTo(User, {
-//   foreignKey: 'user_id',
-//   as: 'user'
-// });
+
 
 // Export semua model dan koneksi
 module.exports = {
