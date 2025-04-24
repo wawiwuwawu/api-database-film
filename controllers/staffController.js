@@ -145,23 +145,43 @@ const updateStaff = async (req, res) => {
 
 
 const deleteStaff = async (req, res) => {
+  const { sequelize } = Staff;
+  let transaction;
+
   try {
-    const { id } = req.params;
-    const staff = await Staff.findByPk(id);
-    if (!staff) {
-      return res.status(404).json({ success: false, error: "Staff tidak ditemukan" });
+      const { id } = req.params;
+
+      transaction = await sequelize.transaction();
+
+      const staff = await Staff.findByPk(id, { transaction });
+
+      if (!staff) {
+        await transaction.rollback();
+        return res.status(404).json({ success: false, error: "Staff tidak ditemukan" });
+      }
+
+      if (staff.delete_hash) {
+        try {
+          await deleteFromImgur(staff.delete_hash);
+        } catch (imgurError) {
+        await transaction.rollback();
+        return res.status(500).json({ success: false, error: "Gagal menghapus gambar" });
+      }
     }
 
-    if (staff.delete_hash) {
-      await deleteFromImgur(staff.delete_hash);
-    }
+      await staff.destroy({ transaction });
 
-    await Staff.destroy({ where: { id } });
-    return res.status(200).json({ success: true, message: "Staff berhasil dihapus" });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
+      await transaction.commit();
+
+      return res.status(200).json({ success: true, message: "Staff berhasil dihapus" });
+    } catch (error) {
+      if (transaction) {
+        await transaction.rollback();
+      }
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  };
+
 
 module.exports = {
   createStaff,

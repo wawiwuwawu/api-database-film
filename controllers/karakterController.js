@@ -99,4 +99,46 @@ const getKarakterDetail = async (req, res) => {
   }
 };
 
-module.exports = { createKarakter, getAllKarakter, getKarakterDetail };
+const deleteKarater = async (req, res) => {
+  const { sequelize } = Karakter;
+  let transaction;
+
+  try {
+    const { id } = req.params;
+
+    transaction = await sequelize.transaction();
+
+    const karakter = await Karakter.findByPk(id, { transaction });
+
+    if (!karakter) {
+      await transaction.rollback();
+      return res.status(404).json({ success: false, message: "Karakter tidak ditemukan" });
+    }
+
+    if (karakter.delete_hast) {
+      try {
+        await deleteFromImgur(karakter.delete_hash);
+      } catch (imgurError) {
+        console.error("Error deleting image from Imgur:", imgurError);
+      }
+    }
+
+    await karakter.destroy({ transaction });
+
+    await transaction.commit();
+
+    return res.status(200).json({ success: true, message: "Karakter berhasil dihapus" });
+  } catch (error) {
+    if (transaction) {
+      await transaction.rollback();
+    }
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+module.exports = { 
+  createKarakter, 
+  getAllKarakter, 
+  getKarakterDetail,
+  deleteKarater
+};

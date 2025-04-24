@@ -163,19 +163,39 @@ const updateMovie = async (req, res) => {
 
 
 const deleteMovie = async (req, res) => {
+  const { sequelize } = Movie;
+  let transaction;
+
   try {
     const { id } = req.params;
-    const movie = await Movie.findByPk(id);
+
+    transaction = await sequelize.transaction();
+
+    const movie = await Movie.findByPk(id, { transaction });
+
     if (!movie) {
-      return res.status(404).json({ success: false, message: "Film tidak ditemukan" });
+      await transaction.rollback();
+      return res.status(404).json({ success: false, error: "Film tidak ditemukan" });
     }
 
-    if (movie.delete_hash) await deleteFromImgur(movie.delete_hash);
+    if (movie.delete_hash) {
+      try {
+        await deleteFromImgur(movie.delete_hash);
+      } catch (error) {
+        await transaction.rollback();
+        return res.status(500).json({ success: false, error: `Gagal menghapus gambar: ${error.message}` });
+      }
+    }
+    
     await movie.destroy({ transaction });
+
     await transaction.commit();
+
     return res.status(200).json({ success: true, message: "Film berhasil dihapus" });
   } catch (error) {
-    await transaction.rollback();
+    if (transaction) {
+      await transaction.rollback();
+    }
     return res.status(500).json({ success: false, error: error.message });
   }
 };
