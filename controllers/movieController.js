@@ -28,7 +28,7 @@ const createMovie = async (req, res) => {
 
     try {
       validateIds(genreIds, 'Genre');
-      validateIds(themaIds, 'Tema');
+      validateIds(themaIds, 'Thema');
     } catch (error) {
       return res.status(400).json({ success: false, error: error.message });
     }
