@@ -2,8 +2,8 @@ module.exports = (sequelize, DataTypes) => {
   const MovieGenre = sequelize.define(
     "movie_genre",
     {
-      movie_id: { type: DataTypes.INTEGER, primaryKey: false, references: { model: "movies", key: "id" } },
-      genre_id: { type: DataTypes.INTEGER, primaryKey: false, references: { model: "genres", key: "id" } }
+      movie_id: { type: DataTypes.INTEGER, primaryKey: true, references: { model: "movies", key: "id" } },
+      genre_id: { type: DataTypes.INTEGER, primaryKey: true, references: { model: "genres", key: "id" } }
     },
     {
       tableName: "movie_genre",
@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
 
   // MovieGenre.associate = (models) => {
   //   MovieGenre.belongsTo(models.Movie, { foreignKey: "movie_id", as: "movie" });
-  //   MovieGenre.belongsTo(models.Genre, { foreignKey: "genre_id", as: "genre" });
+  //   MovieGenre.belongsTo(models.Genre, { foreignKey: "genre_id", as: "genre" });g
   // };
 
   return MovieGenre;
