@@ -33,7 +33,7 @@ app.use('/api/themes', themeRoutes);
 
 
 
-sequelize.sync({ alter: true })
+sequelize.sync({ alter: true, logging: console.log })
   .then(() => console.log('Database synced!'))
   .catch(err => console.error('Sync error:', err));
 app.listen(PORT, () => console.log(`Server running at port: ${PORT}`));
