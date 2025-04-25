@@ -2,21 +2,11 @@ module.exports = (sequelize, DataTypes) => {
   const MovieTheme = sequelize.define(
     "ThemeMovie",
     {
-      movie_id: { type: DataTypes.INTEGER, primaryKey: true,
-        references: {
-          model: "movies",
-          key: "id"
-        }
-      },
-      theme_id: { type: DataTypes.INTEGER, primaryKey: true,
-        references: {
-          model: "theme",
-          key: "id"
-        }
-      }
+      movie_id: { type: DataTypes.INTEGER, primaryKey: true, references: { model: "movies", key: "id" } },
+      theme_id: { type: DataTypes.INTEGER, primaryKey: true, references: { model: "theme", key: "id" } }
     },
     {
-      tableName: "movie_themes",
+      tableName: "movie_theme",
       timestamps: false
     }
   );
