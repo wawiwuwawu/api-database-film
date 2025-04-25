@@ -81,12 +81,14 @@ const createMovie = async (req, res) => {
       }
 
       if (req.file) {
-        imgurData = await uploadToImgur({ buffer: req.file.buffer });
+        const { link, deleteHash } = await uploadToImgur({ buffer: req.file.buffer });
+        imgurData = { cover_url: link, delete_hash: deleteHash };
       }
 
       const movie = await Movie.create({
         ...req.body,
-        ...imgurData
+        cover_url: imgurData.cover_url,
+        delete_hash: imgurData.delete_hash,
       }, { transaction });
 
       await Promise.all([
