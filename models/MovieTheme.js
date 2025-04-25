@@ -21,10 +21,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  MovieTheme.associate = (models) => {
-    MovieTheme.belongsTo(models.Movie, { foreignKey: "movie_id", as: "movie" });
-    MovieTheme.belongsTo(models.Theme, { foreignKey: "theme_id", as: "theme" });
-  };
+  // MovieTheme.associate = (models) => {
+  //   MovieTheme.belongsTo(models.Movie, { foreignKey: "movie_id", as: "movie" });
+  //   MovieTheme.belongsTo(models.Theme, { foreignKey: "theme_id", as: "theme" });
+  // };
 
   return MovieTheme;
 }

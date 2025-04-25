@@ -1,4 +1,6 @@
-// models/Karakter.js
+
+
+
 module.exports = (sequelize, DataTypes) => {
   const Karakter = sequelize.define(
     "karakter",
@@ -15,10 +17,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  Karakter.associate = (models) => {
-    Karakter.belongsToMany(models.Seiyu, { through: models.MovieSeiyu, foreignKey: "karakter_id", otherKey: "seiyu_id", as: "seiyus" });
-    Karakter.belongsToMany(models.Movie, { through: models.MovieSeiyu, foreignKey: "karakter_id", otherKey: "movie_id", as: "movies" });
-  };
+  // Karakter.associate = (models) => {
+  //   Karakter.belongsToMany(models.Seiyu, { through: "movie_seiyu", foreignKey: "karakter_id", otherKey: "seiyu_id", as: "seiyus" });
+  //   Karakter.belongsToMany(models.Movie, { through: "movie_seiyu", foreignKey: "karakter_id", otherKey: "movie_id", as: "movies" });
+  // };
 
   return Karakter;
 };

@@ -10,9 +10,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  Theme.associate = (models) => {
-    Theme.belongsToMany(models.Movie, { through: models.MovieTheme, foreignKey: "theme_id", otherKey: "movie_id", as: "movies" });
-  };
+  // Theme.associate = (models) => {
+  //   Theme.belongsToMany(models.Movie, { through: models.MovieTheme, foreignKey: "theme_id", otherKey: "movie_id", as: "movies" });
+  // };
 
   return Theme;
 };

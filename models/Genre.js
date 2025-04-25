@@ -5,14 +5,14 @@ module.exports = (sequelize, DataTypes) => {
       nama: { type: DataTypes.STRING, allowNull: false }
     },
     {
-      tableName: "genres",
+      tableName: "genre",
       timestamps: false
     }
   );
 
-  Genre.associate = (models) => {
-    Genre.belongsToMany(models.Movie, { through: "movie_genre", foreignKey: "genre_id", otherKey: "movie_id", as: "movies" });
-  };
+  // Genre.associate = (models) => {
+  //   Genre.belongsToMany(models.Movie, { through: "movie_genre", foreignKey: "genre_id", otherKey: "movie_id", as: "movies" });
+  // };
 
   return Genre;
 };

@@ -40,9 +40,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  Staff.associate = (models) => {
-    Staff.belongsToMany(models.Movie, { through: models.MovieStaff, foreignKey: "staff_id", otherKey: "movie_id", as: "movie", });
-  };
+  // Staff.associate = (models) => {
+  //   Staff.belongsToMany(models.Movie, { through: models.MovieStaff, foreignKey: "staff_id", otherKey: "movie_id", as: "movie", });
+  // };
 
   return Staff;
 };

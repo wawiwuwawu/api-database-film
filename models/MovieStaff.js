@@ -22,10 +22,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  MovieStaff.associate = (models) => {
-    MovieStaff.belongsTo(models.Movie, { foreignKey: "movie_id", as: "movie" });
-    MovieStaff.belongsTo(models.Staff, { foreignKey: "staff_id", as: "staff" });
-  };
+  // MovieStaff.associate = (models) => {
+  //   MovieStaff.belongsTo(models.Movie, { foreignKey: "movie_id", as: "movie" });
+  //   MovieStaff.belongsTo(models.Staff, { foreignKey: "staff_id", as: "staff" });
+  // };
 
   return MovieStaff;
 }
