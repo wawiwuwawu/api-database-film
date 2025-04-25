@@ -90,8 +90,8 @@ const createMovie = async (req, res) => {
       }, { transaction });
 
       await Promise.all([
-        movie.addGenres(genre, { transaction }),
-        movie.addThemes(theme, { transaction }),
+        movie.addGenre(genre, { transaction }),
+        movie.addTheme(theme, { transaction }),
       ]);
 
       await transaction.commit();
