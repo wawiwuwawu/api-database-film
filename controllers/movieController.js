@@ -27,9 +27,16 @@ const createMovie = async (req, res) => {
       if (ids.length === 0) {
         throw new Error(`${nama} tidak boleh kosong`);
       }
-      if (!ids.every(id => Number.isInteger(id))) {
-        throw new Error(`${nama} harus berisi angka`);
-      }
+      const parsed = ids.map(item => {
+        const num = Number.isInteger(item) ? item : parseInt(item, 10);
+        if (Number.isNaN(num)) {
+          throw new Error(`${nama} harus berisi angka`);
+        }
+        return num;
+      });
+
+      return parsed;
+      
     };
 
     try {
@@ -63,12 +70,12 @@ const createMovie = async (req, res) => {
         Theme.findAll({ where: { id: themaIds }, transaction })
       ]);
 
-      if (!genre.length !== genreIds.length) {
+      if (genre.length !== genreIds.length) {
         await transaction.rollback();
         return res.status(400).json({ success: false, error: "Genre tidak valid" });
       }
       
-      if (!theme.length !== themaIds.length) {
+      if (theme.length !== themaIds.length) {
         await transaction.rollback();
         return res.status(400).json({ success: false, error: "Tema tidak valid" });
       }
