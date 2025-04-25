@@ -37,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM("G", "PG", "PG-13", "R", "NC-17"),
         allowNull: false
       },
-      cover_url: { type: DataTypes.STRING(255), },
+      cover_url: DataTypes.STRING(255),
       delete_hash: DataTypes.STRING(255),
       created_at: { type: DataTypes.DATE, defaultValue: sequelize.literal("CURRENT_TIMESTAMP") }
     },
