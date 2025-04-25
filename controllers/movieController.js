@@ -11,7 +11,7 @@ const errorResponse = (res, status, message) => {
 const createMovie = async (req, res) => {
   try {
 
-    const { judul, genreIds, themaIds } = req.body;
+    const { judul, genreIds = [], themaIds = [] } = req.body;
 
     if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
       return res.status(400).json({
@@ -21,14 +21,20 @@ const createMovie = async (req, res) => {
     }
 
     const validateIds = (ids, nama) => {
-      if (!ids || !Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ success: false, error: `${nama} tidak boleh kosong` });
+      if (!Array.isArray(ids)) {
+        throw new Error(`${name} harus berupa array`);
+      }
+      if (ids.length === 0) {
+        throw new Error(`${name} tidak boleh kosong`);
+      }
+      if (!ids.every(id => Number.isInteger(id))) {
+        throw new Error(`${name} harus berisi angka`);
       }
     };
 
     try {
-      validateIds(genreIds, 'Genre');
-      validateIds(themaIds, 'Thema');
+      validateIds(genreIds, 'genreIds');
+      validateIds(themaIds, 'themaIds');
     } catch (error) {
       return res.status(400).json({ success: false, error: error.message });
     }
