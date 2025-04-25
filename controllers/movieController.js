@@ -27,9 +27,9 @@ const createMovie = async (req, res) => {
       if (ids.length === 0) {
         throw new Error(`${nama} tidak boleh kosong`);
       }
-      if (!ids.every(id => Number.isInteger(id))) {
-        throw new Error(`${nama} harus berisi angka`);
-      }
+      // if (!ids.every(id => Number.isInteger(id))) {
+      //   throw new Error(`${nama} harus berisi angka`);
+      // }
     };
 
     try {
