@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const MovieStaff = sequelize.define(
-    "movie_staff",
+    "MovieStaff",
     {
       movie_id: { type: DataTypes.INTEGER, primaryKey: true,
         references: {
@@ -17,8 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       tableName: "movie_staff",
-      timestamps: false,
-      underscored: true
+      timestamps: false
     }
   );
 

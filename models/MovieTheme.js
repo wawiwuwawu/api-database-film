@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const MovieTheme = sequelize.define(
-    "movie_theme",
+    "ThemeMovie",
     {
       movie_id: { type: DataTypes.INTEGER, primaryKey: true,
         references: {

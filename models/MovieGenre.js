@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const MovieGenre = sequelize.define(
-    "movie_genre",
+    "MovieGenre",
     {
       movie_id: { type: DataTypes.INTEGER, primaryKey: true, references: { model: "movies", key: "id" } },
       genre_id: { type: DataTypes.INTEGER, primaryKey: true, references: { model: "genres", key: "id" } }
