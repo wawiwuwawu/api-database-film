@@ -11,7 +11,7 @@ const errorResponse = (res, status, message) => {
 const createMovie = async (req, res) => {
   try {
 
-    const { judul, genreIds = [], themaIds = [] } = req.body;
+    const { judul, genreIds = [], themeIds = [] } = req.body;
 
     if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
       return res.status(400).json({
@@ -41,7 +41,7 @@ const createMovie = async (req, res) => {
 
     try {
       validateIds(genreIds, 'genreIds');
-      validateIds(themaIds, 'themaIds');
+      validateIds(themeIds, 'themeIds');
     } catch (error) {
       return res.status(400).json({ success: false, error: error.message });
     }
@@ -67,7 +67,7 @@ const createMovie = async (req, res) => {
 
       const [genre, theme] = await Promise.all([
         Genre.findAll({ where: { id: genreIds }, transaction }),
-        Theme.findAll({ where: { id: themaIds }, transaction })
+        Theme.findAll({ where: { id: themeIds }, transaction })
       ]);
 
       if (genre.length !== genreIds.length) {
@@ -75,7 +75,7 @@ const createMovie = async (req, res) => {
         return res.status(400).json({ success: false, error: "Genre tidak valid" });
       }
       
-      if (theme.length !== themaIds.length) {
+      if (theme.length !== themeIds.length) {
         await transaction.rollback();
         return res.status(400).json({ success: false, error: "Tema tidak valid" });
       }
