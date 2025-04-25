@@ -7,7 +7,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       tableName: "movie_genre",
-      freezeTableName: true,
       timestamps: false
     }
   );

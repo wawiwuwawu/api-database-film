@@ -1,8 +1,6 @@
-// models/index.js
 const sequelize = require('../config/sequelize');
 const { DataTypes } = require('sequelize');
 
-// Import semua model
 const User = require('./User')(sequelize, DataTypes);
 const Movie = require('./Movie')(sequelize, DataTypes);
 const Genre = require('./Genre')(sequelize, DataTypes);
@@ -45,8 +43,6 @@ MovieStaff.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movie' });
 MovieSeiyu.belongsTo(Seiyu, { foreignKey: 'seiyu_id', as: 'seiyu' });
 MovieSeiyu.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movie' });
 MovieSeiyu.belongsTo(Karakter, { foreignKey: 'karakter_id', as: 'karakter' });
-
-
 
 module.exports = {
   sequelize,
