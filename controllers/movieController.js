@@ -22,13 +22,13 @@ const createMovie = async (req, res) => {
 
     const validateIds = (ids, nama) => {
       if (!Array.isArray(ids)) {
-        throw new Error(`${name} harus berupa array`);
+        throw new Error(`${nama} harus berupa array`);
       }
       if (ids.length === 0) {
-        throw new Error(`${name} tidak boleh kosong`);
+        throw new Error(`${nama} tidak boleh kosong`);
       }
       if (!ids.every(id => Number.isInteger(id))) {
-        throw new Error(`${name} harus berisi angka`);
+        throw new Error(`${nama} harus berisi angka`);
       }
     };
 
