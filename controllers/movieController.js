@@ -1,7 +1,6 @@
 const { Movie, Genre, Staff, Theme, Seiyu, Karakter, MovieSeiyu } = require("../models");
 const { sequelize } = require("../models");
 const { uploadToImgur, deleteFromImgur } = require('../config/imgur');
-const { body, validationResult } = require('express-validator');
 
 
 const errorResponse = (res, status, message) => {
@@ -12,13 +11,26 @@ const errorResponse = (res, status, message) => {
 const createMovie = async (req, res) => {
   try {
 
-    const { judul } = req.body;
+    const { judul, genreIds, themaIds } = req.body;
 
     if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
       return res.status(400).json({
         success: false,
         error: 'Format file harus JPG/PNG'
       });
+    }
+
+    const validateIds = (ids, nama) => {
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ success: false, error: `${nama} tidak boleh kosong` });
+      }
+    };
+
+    try {
+      validateIds(genreIds, 'Genre');
+      validateIds(themaIds, 'Tema');
+    } catch (error) {
+      return res.status(400).json({ success: false, error: error.message });
     }
 
     const existing = await Movie.findOne({
@@ -39,6 +51,22 @@ const createMovie = async (req, res) => {
     const transaction = await sequelize.transaction();
 
     try {
+
+      const [genre, theme] = await Promise.all([
+        Genre.findAll({ where: { id: genreIds }, transaction }),
+        Theme.findAll({ where: { id: themaIds }, transaction })
+      ]);
+
+      if (!genre.length !== genreIds.length) {
+        await transaction.rollback();
+        return res.status(400).json({ success: false, error: "Genre tidak valid" });
+      }
+      
+      if (!theme.length !== themaIds.length) {
+        await transaction.rollback();
+        return res.status(400).json({ success: false, error: "Tema tidak valid" });
+      }
+
       if (req.file) {
         imgurData = await uploadToImgur({ buffer: req.file.buffer });
       }
@@ -48,11 +76,22 @@ const createMovie = async (req, res) => {
         ...imgurData
       }, { transaction });
 
+      await Promise.all([
+        movie.addGenres(genre, { transaction }),
+        movie.addThemes(theme, { transaction }),
+      ]);
+
       await transaction.commit();
+
+      const responseData = {
+        ...movie.get(),
+        genres: genre.map(g => g.get()),
+        themes: theme.map(t => t.get())
+      }
 
       return res.status(201).json({ 
         success: true, 
-        data: movie 
+        data: responseData 
       });
     } catch (error) {
       await transaction.rollback();

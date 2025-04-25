@@ -179,7 +179,7 @@ const updateSeiyu = async (req, res) => {
 
 
 const deleteSeiyu = async (req, res) => {
-  const { sequence } = Seiyu;
+  const { sequelize } = Seiyu;
   let transaction;
   
   try {
