@@ -41,7 +41,8 @@ const createSeiyu = async (req, res) => {
 
       const seiyu = await Seiyu.create({
         ...req.body,
-        ...imgurData
+        profile_url: imgurData.image_url,
+        delete_hash: imgurData.delete_hash
       }, { transaction });
 
       await transaction.commit();

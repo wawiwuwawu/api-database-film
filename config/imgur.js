@@ -87,13 +87,13 @@ export async function uploadToImgur({ buffer, filePath }) {
     const base64 = buffer.toString('base64');
     const res = await imgur.uploadBase64(base64);
     return { 
-      profile_url: res.link.replace(/^http:\/\//i,'https://'), 
+      image_url: res.link.replace(/^http:\/\//i,'https://'), 
       delete_hash: res.deletehash };
   }
   if (filePath) {
     const res = await imgur.uploadFile(filePath);
     return { 
-      profile_url: res.link.replace(/^http:\/\//i,'https://'), 
+      image_url: res.link.replace(/^http:\/\//i,'https://'), 
       delete_hash: res.deletehash 
     };
   }
