@@ -13,12 +13,6 @@ module.exports = (sequelize, DataTypes) => {
       }
     );
   
-    
-    // MovieSeiyu.associate = (models) => {
-    //   MovieSeiyu.belongsTo(models.Movie, { foreignKey: "movie_id", as: "movie" });
-    //   MovieSeiyu.belongsTo(models.Seiyu, { foreignKey: "seiyu_id", as: "seiyu" });
-    //   MovieSeiyu.belongsTo(models.Karakter, { foreignKey: "karakter_id", as: "karakter" });
-    // };
   
     return MovieSeiyu;
   };

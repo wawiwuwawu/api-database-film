@@ -13,18 +13,36 @@ const {
 const {
   createSeiyu,
   getAllSeiyus,
-  getAllSeiyusKarakter,
   getSeiyuById,
+  getAllSeiyusDetail,
+  getSeiyusDetailById,
+  getAllSeiyusKarakter,
+  getSeiyusKarakterById,
+  getAllSeiyusMovie,
+  getSeiyusMovieById,
   updateSeiyu,
   deleteSeiyu
 } = require("../controllers/seiyuController");
 
 
-router.post("/", upload.single('file'), seiyuValidationRules, createSeiyu);
-router.get("/", getAllSeiyus);
+router.get("/detail", getAllSeiyusDetail);
+router.get("/detail/:id", getSeiyusDetailById);
+
 router.get("/karakter", getAllSeiyusKarakter);
+router.get("/karakter/:id", getSeiyusKarakterById);
+
+router.get("/movie", getAllSeiyusMovie);
+router.get("/movie/:id", getSeiyusMovieById);
+
+
+router.post("/", upload.single('file'), seiyuValidationRules, createSeiyu);
+
+router.get("/", getAllSeiyus);
+
 router.get("/:id", getSeiyuById);
+
 router.put("/:id", upload.single('file'), seiyuUpdateValidationRules, updateSeiyu);
+
 router.delete("/:id", deleteSeiyu);
 
 module.exports = router;

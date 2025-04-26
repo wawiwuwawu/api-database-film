@@ -1,5 +1,5 @@
-// controllers/themeController.js
 const { Theme } = require("../models");
+const { Movie } = require("../models");
 
 const getAllThemes = async (req, res) => {
   try {
@@ -18,9 +18,14 @@ const getAllThemes = async (req, res) => {
 const getMoviesByTheme = async (req, res) => {
   try {
     const { id } = req.params;
-    const theme = await theme.findByPk(id, {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const theme = await Theme.findByPk(id, {
       include: {
         model: Movie,
+        as: 'movies',
         through: { attributes: [] }
       }
     });
@@ -29,7 +34,36 @@ const getMoviesByTheme = async (req, res) => {
       return res.status(404).json({ success: false, message: "Theme tidak ditemukan" });
     }
 
-    return res.status(200).json({ success: true, data: theme.Movies });
+    if (theme.movies.length === 0) {
+      return res.status(404).json({ success: false, message: "Belum ada film di tema ini" });
+    }
+
+    const totalMovies = theme.movies.length;
+    const totalPages = Math.ceil(totalMovies / limit);
+
+
+    const movies = await Movie.findAll({
+      include: {
+        model: Theme,
+        as: "theme",
+        where: { id: id },
+        through: { attributes: [] }
+      },
+      limit: limit,
+      offset: offset
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: movies,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalMovies,
+        itemsPerPage: limit
+      }
+    });
+
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }

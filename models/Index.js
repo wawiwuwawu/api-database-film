@@ -14,35 +14,78 @@ const MovieTheme = require('./MovieTheme')(sequelize, DataTypes);
 const MovieStaff = require('./MovieStaff')(sequelize, DataTypes);
 
 
-Movie.belongsToMany(Genre, { through: MovieGenre, foreignKey: 'movie_id', otherKey: 'genre_id', as: 'genre' });
-Movie.belongsToMany(Theme, { through: MovieTheme, foreignKey: 'movie_id', otherKey: 'theme_id', as: 'theme' });
-Movie.belongsToMany(Staff, { through: MovieStaff, foreignKey: 'movie_id', otherKey: 'staff_id', as: 'staff' });
-Movie.belongsToMany(Seiyu, { through: MovieSeiyu, foreignKey: 'movie_id', otherKey: 'seiyu_id', as: 'seiyu' });
-Movie.belongsToMany(Karakter, { through: MovieSeiyu, foreignKey: 'movie_id', otherKey: 'karakter_id', as: 'karakter' });
+Movie.belongsToMany(Genre, { through: MovieGenre, foreignKey: 'movie_id', otherKey: 'genre_id', as: 'genres', onDelete: 'CASCADE' });
+Movie.belongsToMany(Theme, { through: MovieTheme, foreignKey: 'movie_id', otherKey: 'theme_id', as: 'themes', onDelete: 'CASCADE' });
+Movie.belongsToMany(Staff, { through: MovieStaff, foreignKey: 'movie_id', otherKey: 'staff_id', as: 'staffs', onDelete: 'CASCADE' });
 
-Genre.belongsToMany(Movie, { through: MovieGenre, foreignKey: 'genre_id', otherKey: 'movie_id', as: 'movies' });
+Genre.belongsToMany(Movie, { through: MovieGenre, foreignKey: 'genre_id', otherKey: 'movie_id', as: 'movies', onDelete: 'CASCADE' });
 
-Theme.belongsToMany(Movie, { through: MovieTheme, foreignKey: 'theme_id', otherKey: 'movie_id', as: 'movies' });
+Theme.belongsToMany(Movie, { through: MovieTheme, foreignKey: 'theme_id', otherKey: 'movie_id', as: 'movies', onDelete: 'CASCADE' });
 
-Staff.belongsToMany(Movie, { through: MovieStaff, foreignKey: 'staff_id', otherKey: 'movie_id', as: 'movies' });
+Staff.belongsToMany(Movie, { through: MovieStaff, foreignKey: 'staff_id', otherKey: 'movie_id', as: 'movies', onDelete: 'CASCADE' });
 
-Seiyu.belongsToMany(Movie, { through: MovieSeiyu, foreignKey: 'seiyu_id', otherKey: 'movie_id', as: 'movies' });
+MovieGenre.belongsTo(Genre, { foreignKey: 'genre_id', as: 'genres' });
+MovieGenre.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movies' });
 
-Karakter.belongsToMany(Movie, { through: MovieSeiyu, foreignKey: 'karakter_id', otherKey: 'movie_id', as: 'movies' });
-Karakter.belongsToMany(Seiyu, { through: MovieSeiyu, foreignKey: 'karakter_id', otherKey: 'seiyu_id', as: 'seiyu' });
+MovieTheme.belongsTo(Theme, { foreignKey: 'theme_id', as: 'themes' });
+MovieTheme.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movies' });
 
-MovieGenre.belongsTo(Genre, { foreignKey: 'genre_id', as: 'genre' });
-MovieGenre.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movie' });
+MovieStaff.belongsTo(Staff, { foreignKey: 'staff_id', as: 'staffs' });
+MovieStaff.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movies' });
 
-MovieTheme.belongsTo(Theme, { foreignKey: 'theme_id', as: 'theme' });
-MovieTheme.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movie' });
+MovieSeiyu.belongsTo(Seiyu, { foreignKey: 'seiyu_id', as: 'seiyus' });
+MovieSeiyu.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movies' });
+MovieSeiyu.belongsTo(Karakter, { foreignKey: 'karakter_id', as: 'karakters' });
 
-MovieStaff.belongsTo(Staff, { foreignKey: 'staff_id', as: 'staff' });
-MovieStaff.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movie' });
+Movie.belongsToMany(Seiyu, {
+  through: { model: MovieSeiyu, unique: false},
+  as: 'seiyus',
+  foreignKey: 'movie_id',
+  otherKey: 'seiyu_id',
+  onDelete: 'CASCADE'
+});
 
-MovieSeiyu.belongsTo(Seiyu, { foreignKey: 'seiyu_id', as: 'seiyu' });
-MovieSeiyu.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movie' });
-MovieSeiyu.belongsTo(Karakter, { foreignKey: 'karakter_id', as: 'karakter' });
+Seiyu.belongsToMany(Movie, {
+  through: { model: MovieSeiyu, unique: false },
+  as: 'movies',
+  foreignKey: 'seiyu_id',
+  otherKey: 'movie_id',
+  onDelete: 'CASCADE'
+});
+
+Movie.belongsToMany(Karakter, {
+  through: { model: MovieSeiyu, unique: false },
+  as: 'karakters',
+  foreignKey: 'movie_id',
+  otherKey: 'karakter_id',
+  onDelete: 'CASCADE'
+});
+
+Karakter.belongsToMany(Movie, {
+  through: { model: MovieSeiyu, unique: false },
+  as: 'movies',
+  foreignKey: 'karakter_id',
+  otherKey: 'movie_id',
+  onDelete: 'CASCADE'
+});
+
+Seiyu.belongsToMany(Karakter, {
+  through: { model: MovieSeiyu, unique: false },
+  as: 'karakters',
+  foreignKey: 'seiyu_id',
+  otherKey: 'karakter_id',
+  onDelete: 'CASCADE'
+});
+
+Karakter.belongsToMany(Seiyu, {
+  through: { model: MovieSeiyu, unique: false },
+  as: 'seiyus',
+  foreignKey: 'karakter_id',
+  otherKey: 'seiyu_id',
+  onDelete: 'CASCADE'
+});
+
+
 
 module.exports = {
   sequelize,

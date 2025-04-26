@@ -2,8 +2,6 @@ const { Movie, Seiyu, Karakter, MovieSeiyu } = require("../models");
 const { sequelize } = require("../models");
 const { validationResult } = require('express-validator');
 const { uploadToImgur, deleteFromImgur } = require('../config/imgur');
-const { get } = require("../routes/userRoutes");
-
 
 
 const createSeiyu = async (req, res) => {
@@ -76,31 +74,10 @@ const getAllSeiyus = async (req, res) => {
 }
 };
 
-const getAllSeiyusKarakter = async (req, res) => {
-  try {
-    const seiyus = await Seiyu.findAll({
-      include: [
-        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakter" },
-        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "pengisi_suara" }
-      ],
-      order: [['created_at', 'DESC']]
-    });
-    return res.status(200).json({ success: true, data: seiyus });
-  } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
-  }
-};
-
 const getSeiyuById = async (req, res) => {
   try {
     const { id } = req.params;
-    const seiyu = await Seiyu.findByPk(id, {
-      include: [
-        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakter" },
-        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "pengisi_suara" }
-      ],
-      order: [['created_at', 'DESC']]
-    });
+    const seiyu = await Seiyu.findByPk(id);
     if (!seiyu) {
       return res.status(404).json({ success: false, message: "Seiyu tidak ditemukan" });
     }
@@ -110,9 +87,104 @@ const getSeiyuById = async (req, res) => {
   }
 };
 
+const getAllSeiyusDetail = async (req, res) => {
+  try {
+    const seiyu = await Seiyu.findAll({
+      include: [
+        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters" },
+        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
+      ]
+    });
+
+
+    return res.status(200).json({ success: true, data: seiyu });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+const getSeiyusDetailById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const seiyu = await Seiyu.findByPk(id, {
+      include: [
+        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters" },
+        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
+      ]
+    });
+    if (!seiyu) {
+      return res.status(404).json({ success: false, message: "Seiyu tidak ditemukan" });
+    }
+    return res.status(200).json({ success: true, data: seiyu });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+const getAllSeiyusKarakter = async (req, res) => {
+  try {
+    const seiyu = await Seiyu.findAll({
+      include: [
+        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters" }
+      ]
+    });
+    return res.status(200).json({ success: true, data: seiyu });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+const getSeiyusKarakterById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const seiyu = await Seiyu.findByPk(id, {
+      include: [
+        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters" }
+      ]
+    });
+    if (!seiyu) {
+      return res.status(404).json({ success: false, message: "Seiyu tidak ditemukan" });
+    }
+    return res.status(200).json({ success: true, data: seiyu });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+const getAllSeiyusMovie = async (req, res) => {
+  try {
+    const seiyu = await Seiyu.findAll({
+      include: [
+        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
+      ]
+    });
+    return res.status(200).json({ success: true, data: seiyu });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+const getSeiyusMovieById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const seiyu = await Seiyu.findByPk(id, {
+      include: [
+        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
+      ]
+    });
+    if (!seiyu) {
+      return res.status(404).json({ success: false, message: "Seiyu tidak ditemukan" });
+    }
+    return res.status(200).json({ success: true, data: seiyu });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+
+
 
 const updateSeiyu = async (req, res) => {
-  const transaction = await sequelize.transaction();
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -124,6 +196,7 @@ const updateSeiyu = async (req, res) => {
   }
 
 
+  const transaction = await sequelize.transaction();
   try {
     const seiyu = await Seiyu.findByPk(req.params.id, { transaction });
     
@@ -147,31 +220,45 @@ const updateSeiyu = async (req, res) => {
       }
     }
 
-    let ImgurData = {};
+    let imgurData = {};
     if (req.file) {
-      try {
-        if (seiyu.delete_hash) {
+      if (seiyu.delete_hash) {
+        try {
           await deleteFromImgur(seiyu.delete_hash);
+        } catch (err) {
+          console.warn('Gagal hapus gambar lama di Imgur:', err);
         }
-        
+      }
 
+      try {
         imgurData = await uploadToImgur({ buffer: req.file.buffer });
-      
-      } catch (error) {
-        await transaction.rollback();
-        return res.status(500).json({ success: false, error: `Gagal update gambar: ${error.message}` });
+      } catch (err) {
+        await t.rollback();
+        return res.status(500).json({
+          success: false,
+          error: `Gagal upload gambar baru: ${err.message}`
+        });
       }
     }
 
+    const updateData = { ...req.body };
+    
+    if (req.file) {
+      updateData.profile_url = imgurData.image_url;
+      updateData.delete_hash = imgurData.delete_hash;
+    } else {
+      delete updateData.profile_url;
+      delete updateData.delete_hash;
+    }
 
-    await seiyu.update({
-      ...req.body,
-      ...ImgurData
-    }, { transaction });
 
+
+    await seiyu.update(updateData, { transaction });
     await transaction.commit();
     
-    return res.status(200).json({ success: true, data: seiyu });
+    const updatedSeiyu = await Seiyu.findByPk(req.params.id);
+    
+    return res.status(200).json({ success: true, data: updatedSeiyu });
   } catch (error) {
     await transaction.rollback();
     return res.status(500).json({ success: false, error: error.message });
@@ -220,7 +307,12 @@ const deleteSeiyu = async (req, res) => {
 module.exports = {
   createSeiyu,
   getAllSeiyus,
+  getAllSeiyusDetail,
+  getSeiyusDetailById,
   getAllSeiyusKarakter,
+  getSeiyusKarakterById,
+  getAllSeiyusMovie,
+  getSeiyusMovieById,
   getSeiyuById,
   updateSeiyu,
   deleteSeiyu

@@ -92,7 +92,6 @@ const createStaffValidationRules = [
   body("name").trim().notEmpty().withMessage("Nama tidak boleh kosong"),
   body("birthday")
     .trim()
-    .notEmpty()
     .isDate()
     .withMessage("Format tanggal tidak valid (YYYY-MM-DD)"),
   body("role")

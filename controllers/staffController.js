@@ -1,10 +1,19 @@
 const { Staff, Movie, MovieStaff } = require("../models");
 const { sequelize } = require("../models");
+const { validationResult } = require('express-validator');
 const { uploadToImgur, deleteFromImgur } = require('../config/imgur');
+
+
+
 
 const createStaff = async (req, res) => {
   try {
-    const { nama } = req.body;
+    const errors = validationResult(req);
+    const { name } = req.body;
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, message: "Format salah", errors: errors.array() });
+    }
 
     if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
       return res.status(400).json({ success: false, error: 'Format file harus JPG/PNG' });
@@ -12,8 +21,8 @@ const createStaff = async (req, res) => {
 
     const existing = await Staff.findOne({
       where: sequelize.where(
-        sequelize.fn('LOWER', sequelize.col('nama')),
-        sequelize.fn('LOWER', nama)
+        sequelize.fn('LOWER', sequelize.col('name')),
+        sequelize.fn('LOWER', name)
       )
     });
 
@@ -29,9 +38,10 @@ const createStaff = async (req, res) => {
         imgurData = await uploadToImgur({ buffer: req.file.buffer });
       }
 
-      const seiyu = await Staff.create({
+      const staff = await Staff.create({
         ...req.body,
-        ...imgurData
+        profile_url: imgurData.image_url,
+        delete_hash: imgurData.delete_hash
       }, { transaction });
 
       await transaction.commit();
@@ -43,7 +53,6 @@ const createStaff = async (req, res) => {
       if (imgurData.deleteHash) {
         await deleteFromImgur(imgurData.deleteHash);
       }
-
       throw error;
     }
 
@@ -54,11 +63,32 @@ const createStaff = async (req, res) => {
 
 const getAllStaff = async (req, res) => {
   try {
+    const staff = await Staff.findAll();
+    return res.status(200).json({ success: true, data: staff });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+const getStaffById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const staff = await Staff.findByPk(id);
+    if (!staff) {
+      return res.status(404).json({ success: false, error: "Staff tidak ditemukan" });
+    }
+    return res.status(200).json({ success: true, data: staff });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+const getAllStaffMovie = async (req, res) => {
+  try {
     const staff = await Staff.findAll({
       include: [
-        { model: Movie, through: { model: MovieStaff, attributes: [] }, as: 'staff' },
-      ],
-      order: [['createdAt', 'DESC']]
+        { model: Movie, through: { model: MovieStaff, attributes: [] }, as: 'movies' },
+      ]
     });
     return res.status(200).json({ success: true, data: staff });
   } catch (error) {
@@ -66,14 +96,13 @@ const getAllStaff = async (req, res) => {
   }
 };
 
-const getStaffById = async (req, res) => {
+const getStaffMovieById = async (req, res) => {
   try {
     const { id } = req.params;
     const staff = await Staff.findByPk(id, {
       include: [
-        { model: Movie, through: { model: MovieStaff, attributes: [] }, as: 'staff' },
+        { model: Movie, through: { model: MovieStaff, attributes: [] }, as: 'movies' },
       ],
-      order: [['createdAt', 'DESC']]
     });
     if (!staff) {
       return res.status(404).json({ success: false, error: "Staff tidak ditemukan" });
@@ -91,11 +120,11 @@ const updateStaff = async (req, res) => {
       return res.status(404).json({ success: false, error: "Staff tidak ditemukan", });
     }
 
-    if (req.body.nama && req.body.nama !== staff.nama) {
+    if (req.body.name && req.body.name !== staff.name) {
       const exists = await Staff.findOne({
         where: sequelize.where(
-          sequelize.fn('LOWER', sequelize.col('nama')),
-          sequelize.fn('LOWER', req.body.nama)
+          sequelize.fn('LOWER', sequelize.col('name')),
+          sequelize.fn('LOWER', req.body.name)
         ),
         transaction
       });
@@ -188,5 +217,7 @@ module.exports = {
   getAllStaff,
   getStaffById,
   updateStaff,
-  deleteStaff,
+  getAllStaffMovie,
+  getStaffMovieById,
+  deleteStaff
 };

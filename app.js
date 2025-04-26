@@ -24,11 +24,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', userRoutes);
 app.use('/api/karakter', karakterRoutes);
-app.use('/api/movies', movieRoutes);
-app.use('/api/seiyus', seiyuRoutes);
-app.use('/api/staffs', staffRoutes);
-app.use('/api/genres', genreRoutes);
-app.use('/api/themes', themeRoutes);
+app.use('/api/movie', movieRoutes);
+app.use('/api/seiyu', seiyuRoutes);
+app.use('/api/staff', staffRoutes);
+app.use('/api/genre', genreRoutes);
+app.use('/api/theme', themeRoutes);
 
 
 

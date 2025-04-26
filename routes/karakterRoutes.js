@@ -6,16 +6,41 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
 const {
-  createKarakter,
-  getAllKarakter,
+  createKarakter, 
+  getAllKarakter, 
+  getKarakterById,
   getKarakterDetail,
+  getKarakterDetailById,
+  getKarakterSeiyu,
+  getKarakterSeiyuById,
+  getKarakterMovie,
+  getKarakterMovieById,
+  updateKarakter,
   deleteKarater
 } = require('../controllers/karakterController');
 
 
-router.post('/upKarakter', upload.single('image'), createKarakter);
+router.get('/detail', getKarakterDetail);
+router.get('/detail/:id', getKarakterDetailById);
+
+router.get('/seiyu', getKarakterSeiyu);
+router.get('/seiyu/:id', getKarakterSeiyuById);
+
+router.get('/movie', getKarakterMovie);
+router.get('/movie/:id', getKarakterMovieById);
+
+
+router.post('/', upload.single('file'), createKarakter);
+
 router.get('/', getAllKarakter);
-router.get('/:id', getKarakterDetail);
+
+router.put('/:id', upload.single('file'), updateKarakter);
+
+router.get('/:id', getKarakterById);
+
 router.delete('/:id', deleteKarater);
 
 module.exports = router;
+
+
+

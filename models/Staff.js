@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
-      birthday: { type: DataTypes.DATEONLY, allowNull: false,
+      birthday: { type: DataTypes.DATEONLY,
         validate: {
           isDate: {
             msg: "Format tanggal tidak valid (YYYY-MM-DD)",
@@ -40,9 +40,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  // Staff.associate = (models) => {
-  //   Staff.belongsToMany(models.Movie, { through: models.MovieStaff, foreignKey: "staff_id", otherKey: "movie_id", as: "movie", });
-  // };
 
   return Staff;
 };

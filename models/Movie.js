@@ -60,13 +60,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  // Movie.associate = (models) => {
-  //   Movie.belongsToMany(models.Genre, { through: "movie_genre", foreignKey: "movie_id", otherKey: "genre_id", as: "genre" });
-  //   Movie.belongsToMany(models.Staff, { through: "movie_staff", foreignKey: "movie_id", otherKey: "staff_id", as: "staff" });
-  //   Movie.belongsToMany(models.Theme, { through: "movie_themes", foreignKey: "movie_id", otherKey: "theme_id", as: "themes" });
-  //   Movie.belongsToMany(models.Seiyu, { through: "movie_seiyu", foreignKey: "movie_id", otherKey: "seiyu_id", as: "pengisi_suara" });
-  //   Movie.belongsToMany(models.Karakter, { through: "movie_seiyu", foreignKey: "movie_id", otherKey: "karakter_id", as: "karakter" });
-  // };
 
   return Movie;
 };

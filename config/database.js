@@ -17,7 +17,7 @@ module.exports = {
   DB_NAME: 'database_film',
   DB_USER: 'root',
   DB_PASSWORD: 'dedeari123',
-  DB_HOST: 'localhost',
+  DB_HOST: '192.168.0.131',
   DB_PORT: 3306,
   DB_DIALECT: 'mysql'
 };

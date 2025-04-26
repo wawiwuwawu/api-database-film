@@ -11,14 +11,22 @@ const {
   getAllStaff,
   getStaffById,
   updateStaff,
+  getAllStaffMovie,
+  getStaffMovieById,
   deleteStaff
 } = require('../controllers/staffController');
 
+router.get("/movie", getAllStaffMovie);
+router.get("/:id/movie", getStaffMovieById);
 
 router.post("/", upload.single('file'), createStaffValidationRules, createStaff);
+
 router.get("/", getAllStaff);
+
 router.get("/:id", getStaffById);
+
 router.put("/:id", upload.single('file'), updateStaffValidationRules, updateStaff);
+
 router.delete("/:id", deleteStaff);
 
 module.exports = router;
