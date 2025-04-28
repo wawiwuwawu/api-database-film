@@ -1,6 +1,6 @@
 // models/User.js
 const { DataTypes } = require("sequelize");
-const bcrypt = require("bcryptjs"); // Untuk hashing password
+const bcrypt = require("bcryptjs");
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
@@ -62,19 +62,17 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "users", // Nama tabel di database
-      timestamps: false, // Nonaktifkan createdAt dan updatedAt otomatis
-      underscored: true, // Konversi camelCase ke snake_case
+      tableName: "users",
+      timestamps: false,
+      underscored: true,
       hooks: {
         beforeCreate: async (user) => {
-          // Hash password sebelum disimpan
           if (user.password) {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(user.password, salt);
           }
         },
         beforeUpdate: async (user) => {
-          // Hash password jika diupdate
           if (user.changed("password")) {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(user.password, salt);
@@ -84,12 +82,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  // Method untuk verifikasi password
   User.prototype.verifyPassword = async function (password) {
     return await bcrypt.compare(password, this.password);
   };
 
-  // Relasi (contoh: 1 user punya banyak review)
   User.associate = (models) => {
     User.hasMany(models.Review, {
       foreignKey: "user_id",

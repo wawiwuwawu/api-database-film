@@ -28,10 +28,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  // Seiyu.associate = (models) => {
-  //   Seiyu.belongsToMany(models.Karakter, { through: models.MovieSeiyu, foreignKey: "seiyu_id", otherKey: "karakter_id", as: "karakter" });
-  //   Seiyu.belongsToMany(models.Movie, { through: models.MovieSeiyu, foreignKey: "seiyu_id", otherKey: "movie_id", as: "movie" });
-  // };
 
   return Seiyu;
 };
