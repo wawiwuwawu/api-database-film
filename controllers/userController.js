@@ -3,11 +3,12 @@ const { validationResult } = require('express-validator');
 const { User, sequelize } = require('../models');
 const { deleteFromImgur, uploadToImgur } = require('../config/imgur');
 
+
 const registerUser = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, message: "Validasi gagal", errors: errors.array() });
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+      return res.status(400).json({ success: false, message: "Validasi gagal", error: error.array() });
     }
 
     const { name, email, password } = req.body;
@@ -50,9 +51,9 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, message: "Validasi gagal", errors: errors.array() });
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+      return res.status(400).json({ success: false, message: "Validasi gagal", error: error.array() });
     }
 
     const { email, password } = req.body;
@@ -122,7 +123,7 @@ const getUserById = async (req, res) => {
   }
 }
 
-export async function getCurrentUser(req, res) {
+const getCurrentUser = async (req, res) => {
 
   const userId = req.user.userId;
 
@@ -134,10 +135,10 @@ export async function getCurrentUser(req, res) {
 }
 
 const updateUser = async (req, res) => {
-  const errors = validationResult(req);
+  const error = validationResult(req);
 
-  if(!errors.isEmpty()) {
-    return res.status(400).json({ success: false, message: "Format salah", errors: errors.array() });
+  if(!error.isEmpty()) {
+    return res.status(400).json({ success: false, message: "Format salah", error: error.array() });
   }
 
   if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
@@ -164,7 +165,7 @@ const updateUser = async (req, res) => {
 
       if (exists) {
         await transaction.rollback();
-        return res.status(409).json({ success: false, erro: "Nama user sudah terdaftar" });
+        return res.status(409).json({ success: false, error: "Nama user sudah terdaftar" });
       }
     }
 
@@ -173,18 +174,18 @@ const updateUser = async (req, res) => {
       if (users.delete_hash) {
         try {
           await deleteFromImgur(users.delete_hash);
-        } catch (err) {
-          console.warn('Gagal hapus gambar lama di imgur:', err);
+        } catch (error) {
+          console.warn('Gagal hapus gambar lama di imgur:', error);
         }
       }
 
       try {
         imgurData = await uploadToImgur({ buffer: req.file.buffer });
-      } catch (err) {
+      } catch (error) {
         await transaction.rollback();
         return res.status(500).json({
           success: false,
-          error: `Gagal upload gambar baru: ${err.message}`
+          error: `Gagal upload gambar baru: ${error.message}`
         });
       }
     }
@@ -224,7 +225,7 @@ const updateUser = async (req, res) => {
     
           if (!users) {
             await transaction.rollback();
-            return res.status(404).json({ success: false, error: "Seiyu tidak ditemukan" });
+            return res.status(404).json({ success: false, error: "User tidak ditemukan" });
           }
     
           if (users.delete_hash) {
@@ -240,7 +241,7 @@ const updateUser = async (req, res) => {
     
           await transaction.commit();
     
-          return res.status(200).json({ success: true, message: "Seiyu berhasil dihapus" });
+          return res.status(200).json({ success: true, message: "User berhasil dihapus" });
       } catch (error) {
           if (transaction) {
             await transaction.rollback();
@@ -248,6 +249,8 @@ const updateUser = async (req, res) => {
           return res.status(500).json({ success: false, error: error.message });
       }
     };
+
+
 
 module.exports = {
   registerUser,

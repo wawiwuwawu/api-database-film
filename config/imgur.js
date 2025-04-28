@@ -104,17 +104,6 @@ export async function deleteFromImgur(deleteHash) {
   await imgur.deleteImage(deleteHash);
 }
 
-// async function deleteFromImgur(deleteHash) {
-//   if (!deleteHash) return false;
-//   try {
-//     // deleteImage menerima deleteHash langsung
-//     await imgur.deleteImage(deleteHash);
-//     return true;
-//   } catch (error) {
-//     console.error('[IMGUR DELETE ERROR]', error.message);
-//     return false;
-//   }
-// }
 
 export default {
   uploadToImgur,

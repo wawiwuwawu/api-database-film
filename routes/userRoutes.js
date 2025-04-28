@@ -1,9 +1,8 @@
-// routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
 
-import authGuard from '../middlewares/auth.middleware.js';
-import { adminOnly } from '../middlewares/role.middleware.js';
+const authGuard     = require('../middlewares/auth.middleware');
+const { adminOnly } = require('../middlewares/role.middleware');
 
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
@@ -25,7 +24,7 @@ router.post('/login', validateLogin, loginUser);
 router.put('/:id', upload.single('file'), updateUser);
 router.get('/', getAllUser);
 router.get('/me', authGuard, getCurrentUser);
-router.get('/:id', adminOnly, authGuard, getUserById);
+router.get('/:id', authGuard, adminOnly, getUserById);
 router.delete('/:id', deleteUser);
 
 module.exports = router;
