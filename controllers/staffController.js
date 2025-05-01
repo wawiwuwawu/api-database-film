@@ -126,7 +126,7 @@ const updateStaff = async (req, res) => {
 
   const transaction = await sequelize.transaction();
   try {
-    const staff = await Seiyu.findByPk(req.params.id, { transaction });
+    const staff = await Staff.findByPk(req.params.id, { transaction });
 
     if (!staff) {
       await transaction.rollback();
@@ -152,7 +152,7 @@ const updateStaff = async (req, res) => {
     if (req.file) {
       if (staff.delete_hash) {
         try {
-          await deleteFromImgur(seiyu.delete_hash);
+          await deleteFromImgur(staff.delete_hash);
         } catch (err) {
           console.warn('Gagal hapus gambar lama di Imgur:', err);
         }
@@ -182,7 +182,7 @@ const updateStaff = async (req, res) => {
     await staff.update(updateData, { transaction });
     await transaction.commit();
 
-    const updatedStaff = await Seiyu.findByPk(req.params.id);
+    const updatedStaff = await Staff.findByPk(req.params.id);
 
     return res.status(200).json({ success: true, data: updatedStaff });
     } catch (error) {
