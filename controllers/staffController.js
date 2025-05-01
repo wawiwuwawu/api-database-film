@@ -114,12 +114,22 @@ const getStaffMovieById = async (req, res) => {
 };
 
 const updateStaff = async (req, res) => {
-  let transaction;
-  try {
-    transaction = await sequelize.transaction();
+  const errors = validationResult(req);
 
-    const staff = await Staff.findByPk(req.params.id);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, message: "Format salah", errors: errors.array() });
+  }
+  
+  if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
+    return res.status(400).json({ success: false, error: 'Format file harus JPG/PNG' });
+  }
+
+  const transaction = await sequelize.transaction();
+  try {
+    const staff = await Seiyu.findByPk(req.params.id, { transaction });
+
     if (!staff) {
+      await transaction.rollback();
       return res.status(404).json({ success: false, error: "Staff tidak ditemukan", });
     }
 
@@ -133,46 +143,52 @@ const updateStaff = async (req, res) => {
       });
 
       if (exists) {
+        await transaction.rollback();
         return res.status(409).json({ success: false, error: "Nama staff sudah terdaftar", });
       }
     }
 
     let imgurData = {};
-    if (staff.delete_hash) {
-      await deleteFromImgur(staff.delete_hash);
-    }
-
-    try {
-      if (req.file) {
-        if (['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
-          imgurData = await uploadToImgur({ buffer: req.file.buffer });
-        } else {
-          return res.status(400).json({ success: false, error: 'Format file harus JPG/PNG' });
+    if (req.file) {
+      if (staff.delete_hash) {
+        try {
+          await deleteFromImgur(seiyu.delete_hash);
+        } catch (err) {
+          console.warn('Gagal hapus gambar lama di Imgur:', err);
         }
       }
 
-      const staff = await Staff.update({
-        ...req.body,
-        ...imgurData
-      }, {
-        where: { id: req.params.id }
-      })
-
-      await transaction.commit();
-
-      return res.status(200).json({ success: true, data: staff });
-
-    } catch (error) {
-      await transaction.rollback();
-      if (imgurData.deleteHash) {
-        await deleteFromImgur(imgurData.deleteHash);
+      try {
+        imgurData = await uploadToImgur({ buffer: req.file.buffer });
+      } catch (err) {
+        await t.rollback();
+        return res.status(500).json({
+          success: false,
+          error: `Gagal upload gambar baru: ${err.message}`
+        });
       }
-      throw error;
     }
 
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+    const updateData = { ...req.body };
+
+    if (req.file) {
+      updateData.profile_url = imgurData.image_url;
+      updateData.delete_hash = imgurData.delete_hash;
+    } else {
+      delete updateData.profile_url;
+      delete updateData.delete_hash;
+    }
+
+    await staff.update(updateData, { transaction });
+    await transaction.commit();
+
+    const updatedStaff = await Seiyu.findByPk(req.params.id);
+
+    return res.status(200).json({ success: true, data: updatedStaff });
+    } catch (error) {
+      await transaction.rollback();
+      return res.status(500).json({ success: false, error: error.message });
+    }
 };
 
 
