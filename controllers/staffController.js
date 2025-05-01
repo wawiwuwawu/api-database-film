@@ -114,7 +114,10 @@ const getStaffMovieById = async (req, res) => {
 };
 
 const updateStaff = async (req, res) => {
+  let transaction;
   try {
+    transaction = await sequelize.transaction();
+
     const staff = await Staff.findByPk(req.params.id);
     if (!staff) {
       return res.status(404).json({ success: false, error: "Staff tidak ditemukan", });
