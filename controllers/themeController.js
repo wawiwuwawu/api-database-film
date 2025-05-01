@@ -45,7 +45,7 @@ const getMoviesByTheme = async (req, res) => {
     const movies = await Movie.findAll({
       include: {
         model: Theme,
-        as: "theme",
+        as: "themes",
         where: { id: id },
         through: { attributes: [] }
       },
