@@ -65,11 +65,7 @@ const movieUpdateValidationRules = [
 
 const seiyuValidationRules = [
   body("name").trim().notEmpty().withMessage("Nama tidak boleh kosong"),
-  body("birthday")
-    .trim()
-    .notEmpty()
-    .isDate()
-    .withMessage("Format tanggal tidak valid (YYYY-MM-DD)"),
+  body("birthday").optional({ checkFalsy: true }).trim().isDate().withMessage("Format tanggal tidak valid (YYYY-MM-DD)"),
   body("website_url").optional().isURL().withMessage("URL website tidak valid"),
   body("instagram_url").optional().isURL().withMessage("URL Instagram tidak valid"),
   body("twitter_url").optional().isURL().withMessage("URL Twitter tidak valid"),
@@ -80,7 +76,7 @@ const seiyuValidationRules = [
 const seiyuUpdateValidationRules = [
   param("id").isInt().withMessage("ID harus angka"),
   body("name").optional().trim().notEmpty().withMessage("Nama tidak boleh kosong"),
-  body("birthday").optional().isDate().withMessage("Format tanggal tidak valid"),
+  body("birthday").optional({ checkFalsy: true }).trim().isDate().withMessage("Format tanggal tidak valid (YYYY-MM-DD)"),
   body("website_url").optional().isURL(),
   body("instagram_url").optional().isURL(),
   body("twitter_url").optional().isURL(),
@@ -90,21 +86,14 @@ const seiyuUpdateValidationRules = [
 
 const createStaffValidationRules = [
   body("name").trim().notEmpty().withMessage("Nama tidak boleh kosong"),
-  body("birthday")
-    .trim()
-    .isDate()
-    .withMessage("Format tanggal tidak valid (YYYY-MM-DD)"),
-  body("role")
-    .trim()
-    .notEmpty()
-    .isIn(["Director", "Producer", "Staff"])
-    .withMessage("Role harus Director, Producer, atau Staff"),
+  body("birthday").optional({ checkFalsy: true }).trim().isDate().withMessage("Format tanggal tidak valid (YYYY-MM-DD)"),
+  body("role").trim().notEmpty().isIn(["Director", "Producer", "Staff"]).withMessage("Role harus Director, Producer, atau Staff"),
 ];
 
 const updateStaffValidationRules = [
   param("id").isInt().withMessage("ID harus angka"),
   body("name").optional().trim().notEmpty().withMessage("Nama tidak boleh kosong"),
-  body("birthday").optional().isDate(),
+  body("birthday").optional({ checkFalsy: true }).trim().isDate().withMessage("Format tanggal tidak valid (YYYY-MM-DD)"),
   body("role").optional().isIn(["Director", "Producer", "Staff"]),
 ];
 
