@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
           notEmpty: { msg: "Nama tidak boleh kosong" },
         },
       },
-      birthday: { type: DataTypes.DATEONLY, allowNull: false,
+      birthday: { type: DataTypes.DATEONLY,
         validate: {
           isDate: { msg: "Format tanggal tidak valid (YYYY-MM-DD)" },
         },
