@@ -13,11 +13,14 @@ const {
   updateStaff,
   getAllStaffMovie,
   getStaffMovieById,
+  getStaffByName,
   deleteStaff
 } = require('../controllers/staffController');
 
 router.get("/movie", getAllStaffMovie);
 router.get("/:id/movie", getStaffMovieById);
+
+router.get("/search", getStaffByName);
 
 router.post("/", upload.single('file'), createStaffValidationRules, createStaff);
 

@@ -192,6 +192,46 @@ const getKarakterMovieById = async (req, res) => {
   }
 }
 
+const getKarakterByName = async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res.status(400).json({ success: false, error: "Nama karakter harus disertakan dalam query parameter" });
+    }
+
+    const karakter = await Karakter.findAll({
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('nama')),
+        'LIKE',
+        `%${name.toLowerCase()}%`
+      ),
+      include: [
+        {
+          model: Seiyu,
+          through: { model: MovieSeiyu, attributes: [] },
+          as: "seiyus",
+          attributes: ["id", "name", "profile_url"]
+        },
+        {
+          model: Movie,
+          through: { model: MovieSeiyu, attributes: [] },
+          as: "movies",
+          attributes: ["id", "judul", "tahun_rilis"]
+        }
+      ]
+    });
+
+    if (karakter.length === 0) {
+      return res.status(404).json({ success: false, error: "Karakter tidak ditemukan" });
+    }
+
+    return res.status(200).json({ success: true, data: karakter });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 const updateKarakter = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -320,6 +360,7 @@ module.exports = {
   getKarakterSeiyuById,
   getKarakterMovie,
   getKarakterMovieById,
+  getKarakterByName,
   updateKarakter,
   deleteKarater
 };

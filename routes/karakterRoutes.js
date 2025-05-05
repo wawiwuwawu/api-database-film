@@ -15,6 +15,7 @@ const {
   getKarakterSeiyuById,
   getKarakterMovie,
   getKarakterMovieById,
+  getKarakterByName,
   updateKarakter,
   deleteKarater
 } = require('../controllers/karakterController');
@@ -29,6 +30,7 @@ router.get('/seiyu/:id', getKarakterSeiyuById);
 router.get('/movie', getKarakterMovie);
 router.get('/movie/:id', getKarakterMovieById);
 
+router.get('/search', getKarakterByName);
 
 router.post('/', upload.single('file'), createKarakter);
 

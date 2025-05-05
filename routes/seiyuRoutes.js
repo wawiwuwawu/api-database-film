@@ -20,6 +20,7 @@ const {
   getSeiyusKarakterById,
   getAllSeiyusMovie,
   getSeiyusMovieById,
+  getSeiyuByName,
   updateSeiyu,
   deleteSeiyu
 } = require("../controllers/seiyuController");
@@ -34,6 +35,7 @@ router.get("/karakter/:id", getSeiyusKarakterById);
 router.get("/movie", getAllSeiyusMovie);
 router.get("/movie/:id", getSeiyusMovieById);
 
+router.get("/search", getSeiyuByName);
 
 router.post("/", upload.single('file'), seiyuValidationRules, createSeiyu);
 

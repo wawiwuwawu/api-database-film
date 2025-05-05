@@ -199,7 +199,7 @@ const getMovieById = async (req, res) => {
     const { id } = req.params;
     const movie = await Movie.findByPk(id);
     if (!movie) {
-      return res.status(404).json({ success: false, error: "Film tidak ditemukan" });
+      return errorResponse(res, 404, "Film tidak ditemukan");
     }
     return res.status(200).json({ success: true, data: movie });
   } catch (error) {
@@ -225,14 +225,46 @@ const getMovieByIdDetail = async (req, res) => {
   }
 };
 
+const getMovieByName = async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res.status(400).json({ success: false, error: "Nama film harus disertakan dalam query parameter" });
+    }
+
+    const movies = await Movie.findAll({
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('judul')),
+        'LIKE',
+        `%${name.toLowerCase()}%`
+      ),
+      include: [
+        { model: Genre, attributes: ['id', 'nama'], as: 'genres', through: { attributes: [] } },
+        { model: Theme, attributes: ['id', 'nama'], as: 'themes', through: { attributes: [] } },
+        { model: Staff, attributes: ['id', 'name', 'role', 'profile_url'], as: 'staffs', through: { attributes: [] } },
+        { model: Seiyu, attributes: ['id', 'name', 'profile_url'], through: { attributes: ['karakter_id'] }, as: 'seiyus', include: [{ model: Karakter, as: 'karakters', attributes: ['id', 'nama'], through: { attributes: [] } }] },
+        { model: Karakter, attributes: ['id', 'nama', 'profile_url'], as: 'karakters', through: { attributes: [] } }
+      ]
+    });
+
+    if (movies.length === 0) {
+      return res.status(404).json({ success: false, error: "Film tidak ditemukan" });
+    }
+
+    return res.status(200).json({ success: true, data: movies });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
 
 const updateMovie = async (req, res) => {
-  const t = await sequelize.transaction();
+  const transaction = await sequelize.transaction();
   try {
     const movieId = req.params.id;
     const { judul, genreIds = [], themeIds = [], staffIds = [], seiyuIds = [], karakterIds = [] } = req.body;
 
-    const movie = await Movie.findByPk(movieId, { transaction: t });
+    const movie = await Movie.findByPk(movieId, { transaction });
     if (!movie) {
       return res.status(404).json({ success: false, error: "Film tidak ditemukan" });
     }
@@ -300,7 +332,7 @@ const updateMovie = async (req, res) => {
       try {
         imgurData = await uploadToImgur({ buffer: req.file.buffer });
       } catch (err) {
-        await t.rollback();
+        await transaction.rollback();
         return res.status(500).json({
           success: false,
           error: `Gagal upload gambar baru: ${err.message}`
@@ -312,23 +344,23 @@ const updateMovie = async (req, res) => {
       ...req.body,
       cover_url: imgurData.image_url,
       delete_hash: imgurData.delete_hash
-    }, { transaction: t });
+    }, { transaction });
 
     if (genreIds.length) {
-      await movie.setGenres(genreIds, { transaction: t });
+      await movie.setGenres(genreIds, { transaction });
     }
     if (themeIds.length) {
-      await movie.setThemes(themeIds, { transaction: t });
+      await movie.setThemes(themeIds, { transaction });
     }
     if (staffIds.length) {
-      await movie.setStaffs(staffIds, { transaction: t });
+      await movie.setStaffs(staffIds, { transaction });
     }
 
     if (seiyuIds.length) {
 
       await MovieSeiyu.destroy({
         where: { movie_id: movieId },
-        transaction: t
+        transaction
       });
 
       const pivotEntries = seiyuIds.map((sid, i) => ({
@@ -336,10 +368,10 @@ const updateMovie = async (req, res) => {
         seiyu_id: sid,
         karakter_id: karakterIds[i]
       }));
-      await MovieSeiyu.bulkCreate(pivotEntries, { transaction: t });
+      await MovieSeiyu.bulkCreate(pivotEntries, { transaction });
   }
 
-  await t.commit();
+  await transaction.commit();
 
   const updatedMovie = await Movie.findByPk(movieId, {
     include: [
@@ -358,22 +390,22 @@ const updateMovie = async (req, res) => {
 
   return res.status(200).json({ success: true, data: updatedMovie });
 } catch (error) {
-  await t.rollback();
+  await transaction.rollback();
   return res.status(500).json({ success: false, error: error.message });
   }
 };
 
 const deleteMovie = async (req, res) => {
   const { sequelize } = Movie;
-  const t = await sequelize.transaction();
+  const transaction = await sequelize.transaction();
 
   try {
     const { id } = req.params;
 
-    const movie = await Movie.findByPk(id, { transaction: t });
+    const movie = await Movie.findByPk(id, { transaction });
 
     if (!movie) {
-      await t.rollback();
+      await transaction.rollback();
       return res.status(404).json({ success: false, error: "Film tidak ditemukan" });
     }
 
@@ -381,25 +413,25 @@ const deleteMovie = async (req, res) => {
       try {
         await deleteFromImgur(movie.delete_hash);
       } catch (err) {
-        await t.rollback();
+        await transaction.rollback();
         return res.status(500).json({ success: false, error: `Gagal menghapus gambar: ${err.message}` });
       }
     }
 
     await Promise.all([
-      MovieGenre.destroy({ where: { movie_id: id }, transaction: t }),
-      MovieTheme.destroy({ where: { movie_id: id }, transaction: t }),
-      MovieStaff.destroy({ where: { movie_id: id }, transaction: t }),
-      MovieSeiyu.destroy({ where: { movie_id: id }, transaction: t })
+      MovieGenre.destroy({ where: { movie_id: id }, transaction }),
+      MovieTheme.destroy({ where: { movie_id: id }, transaction }),
+      MovieStaff.destroy({ where: { movie_id: id }, transaction }),
+      MovieSeiyu.destroy({ where: { movie_id: id }, transaction })
     ]);
     
-    await movie.destroy({ transaction: t });
+    await movie.destroy({ transaction });
 
-    await t.commit();
+    await transaction.commit();
 
     return res.status(200).json({ success: true, message: "Film berhasil dihapus" });
   } catch (error) {
-    await t.rollback();
+    await transaction.rollback();
     return res.status(500).json({ success: false, error: error.message });
   }
 };
@@ -411,5 +443,6 @@ module.exports = {
   updateMovie,
   getAllMoviesDetail,
   getMovieByIdDetail,
+  getMovieByName,
   deleteMovie
 };

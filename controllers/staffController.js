@@ -113,6 +113,35 @@ const getStaffMovieById = async (req, res) => {
   }
 };
 
+const getStaffByName = async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res.status(400).json({ success: false, error: "Nama staff harus disertakan dalam query parameter" });
+    }
+
+    const staff = await Staff.findAll({
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('name')),
+        'LIKE',
+        `%${name.toLowerCase()}%`
+      ),
+      include: [
+        { model: Movie, through: { model: MovieStaff, attributes: [] }, as: 'movies' }
+      ]
+    });
+
+    if (staff.length === 0) {
+      return res.status(404).json({ success: false, error: "Staff tidak ditemukan" });
+    }
+
+    return res.status(200).json({ success: true, data: staff });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 const updateStaff = async (req, res) => {
   const errors = validationResult(req);
 
@@ -238,5 +267,6 @@ module.exports = {
   updateStaff,
   getAllStaffMovie,
   getStaffMovieById,
+  getStaffByName,
   deleteStaff
 };

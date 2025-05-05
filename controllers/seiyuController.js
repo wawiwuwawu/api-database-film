@@ -91,7 +91,7 @@ const getAllSeiyusDetail = async (req, res) => {
   try {
     const seiyu = await Seiyu.findAll({
       include: [
-        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters" },
+        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters", include: [{ model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }] },
         { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
       ]
     });
@@ -125,7 +125,7 @@ const getAllSeiyusKarakter = async (req, res) => {
   try {
     const seiyu = await Seiyu.findAll({
       include: [
-        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters" }
+        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters", include: [{ model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }] }
       ]
     });
     return res.status(200).json({ success: true, data: seiyu });
@@ -181,8 +181,35 @@ const getSeiyusMovieById = async (req, res) => {
   }
 }
 
+const getSeiyuByName = async (req, res) => {
+  try {
+    const { name } = req.query;
 
+    if (!name) {
+      return res.status(400).json({ success: false, error: "Nama seiyu harus disertakan dalam query parameter" });
+    }
 
+    const seiyus = await Seiyu.findAll({
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('name')),
+        'LIKE',
+        `%${name.toLowerCase()}%`
+      ),
+      include: [
+        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters" },
+        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
+      ]
+    });
+
+    if (seiyus.length === 0) {
+      return res.status(404).json({ success: false, error: "Seiyu tidak ditemukan" });
+    }
+
+    return res.status(200).json({ success: true, data: seiyus });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
 
 const updateSeiyu = async (req, res) => {
   const errors = validationResult(req);
@@ -314,6 +341,7 @@ module.exports = {
   getAllSeiyusMovie,
   getSeiyusMovieById,
   getSeiyuById,
+  getSeiyuByName,
   updateSeiyu,
   deleteSeiyu
 };

@@ -1,4 +1,3 @@
-// routes/movieRoutes.js
 const express = require("express");
 const router = express.Router();
 
@@ -17,12 +16,15 @@ const {
   updateMovie,
   getMovieByIdDetail,
   getAllMoviesDetail,
+  getMovieByName,
   deleteMovie
 } = require("../controllers/movieController");
 
 
 router.get("/detail", getAllMoviesDetail);
 router.get("/:id/detail", getMovieByIdDetail);
+
+router.get("/search", getMovieByName);
 
 router.post("/", upload.single("file"), movieValidationRules, createMovie);
 
