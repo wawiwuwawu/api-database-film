@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const admin = require('../config/firebase');
 const { validationResult } = require('express-validator');
 const { User, sequelize } = require('../models');
 const { deleteFromImgur, uploadToImgur } = require('../config/imgur');

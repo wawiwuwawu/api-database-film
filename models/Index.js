@@ -12,6 +12,9 @@ const MovieSeiyu = require('./MovieSeiyu')(sequelize, DataTypes);
 const MovieGenre = require('./MovieGenre')(sequelize, DataTypes);
 const MovieTheme = require('./MovieTheme')(sequelize, DataTypes);
 const MovieStaff = require('./MovieStaff')(sequelize, DataTypes);
+const MovieList = require('./MovieList')(sequelize, DataTypes);
+
+
 
 
 Movie.belongsToMany(Genre, { through: MovieGenre, foreignKey: 'movie_id', otherKey: 'genre_id', as: 'genres', onDelete: 'CASCADE' });
@@ -85,7 +88,27 @@ Karakter.belongsToMany(Seiyu, {
   onDelete: 'CASCADE'
 });
 
+User.belongsToMany(Movie, {
+  through: MovieList,
+  as: 'movies',
+  foreignKey: 'user_id',
+  otherKey: 'movie_id',
+  onDelete: 'CASCADE'
+});
 
+Movie.belongsToMany(User, {
+  through: MovieList,
+  as: 'users',
+  foreignKey: 'movie_id',
+  otherKey: 'user_id',
+  onDelete: 'CASCADE'
+});
+
+MovieList.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+MovieList.belongsTo(Movie, { foreignKey: 'movie_id', as: 'movie' });
+
+User.hasMany(MovieList, { foreignKey: 'user_id', as: 'movieLists' });
+Movie.hasMany(MovieList, { foreignKey: 'movie_id', as: 'movieLists' });
 
 module.exports = {
   sequelize,
@@ -99,5 +122,6 @@ module.exports = {
   MovieGenre,
   MovieTheme,
   MovieStaff,
-  User
+  User,
+  MovieList
 };
