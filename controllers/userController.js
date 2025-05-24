@@ -138,8 +138,7 @@ const getCurrentUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const error = validationResult(req);
-
-  if(!error.isEmpty()) {
+  if (!error.isEmpty()) {
     return res.status(400).json({ success: false, message: "Format salah", error: error.array() });
   }
 
@@ -149,14 +148,14 @@ const updateUser = async (req, res) => {
 
   const transaction = await sequelize.transaction();
   try {
-    const users = await User.findByPk(req.params.id, { transaction });
-
-    if (!users) {
+    const user = await User.findByPk(req.params.id, { transaction });
+    if (!user) {
       await transaction.rollback();
       return res.status(404).json({ success: false, error: "User tidak ditemukan" });
     }
 
-    if (req.body.name && req.body.name !== users.name) {
+    // Cek duplikasi nama jika diubah
+    if (req.body.name && req.body.name !== user.name) {
       const exists = await User.findOne({
         where: sequelize.where(
           sequelize.fn('LOWER', sequelize.col('name')),
@@ -164,7 +163,6 @@ const updateUser = async (req, res) => {
         ),
         transaction
       });
-
       if (exists) {
         await transaction.rollback();
         return res.status(409).json({ success: false, error: "Nama user sudah terdaftar" });
@@ -173,85 +171,67 @@ const updateUser = async (req, res) => {
 
     let imgurData = {};
     if (req.file) {
-      if (users.delete_hash) {
+      if (user.delete_hash) {
         try {
-          await deleteFromImgur(users.delete_hash);
+          await deleteFromImgur(user.delete_hash);
         } catch (error) {
           console.warn('Gagal hapus gambar lama di imgur:', error);
         }
       }
-
       try {
         imgurData = await uploadToImgur({ buffer: req.file.buffer });
       } catch (error) {
         await transaction.rollback();
-        return res.status(500).json({
-          success: false,
-          error: `Gagal upload gambar baru: ${error.message}`
-        });
+        return res.status(500).json({ success: false, error: `Gagal upload gambar baru: ${error.message}` });
       }
     }
 
-        const updateData = { ...req.body };
+    const updateData = { ...req.body };
+    if (req.file) {
+      updateData.profile_url = imgurData.image_url;
+      updateData.delete_hash = imgurData.delete_hash;
+    } else {
+      delete updateData.profile_url;
+      delete updateData.delete_hash;
+    }
 
-        if (req.file) {
-          updateData.profile_url = imgurData.image_url;
-          updateData.delete_hash = imgurData.delete_hash;
-        } else {
-          delete updateData.profile_url;
-          delete updateData.delete_hash;
-        }
+    await user.update(updateData, { transaction });
+    await transaction.commit();
 
-        await users.update(updateData, { transaction });
-        await transaction.commit();
+    const updatedUser = await User.findByPk(req.params.id);
+    return res.status(200).json({ success: true, data: updatedUser });
+  } catch (error) {
+    await transaction.rollback();
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
 
-        const updateUser = await User.findByPk(req.params.id);
-
-        return res.status(200).json({ success: true, data: updateUser });
-      } catch (error) {
-        await transaction.rollback();
-        return res.status(500).json({ success: false, error: error.message });
-      }
-    };
-
-    const deleteUser = async (req, res) => {
-      const { sequelize } = User;
-      let transaction;
-      
+const deleteUser = async (req, res) => {
+  let transaction;
+  try {
+    const { id } = req.params;
+    transaction = await sequelize.transaction();
+    const user = await User.findByPk(id, { transaction });
+    if (!user) {
+      await transaction.rollback();
+      return res.status(404).json({ success: false, error: "User tidak ditemukan" });
+    }
+    if (user.delete_hash) {
       try {
-          const { id } = req.params;
-    
-          transaction = await sequelize.transaction();
-    
-          const users = await User.findByPk(id, { transaction });
-    
-          if (!users) {
-            await transaction.rollback();
-            return res.status(404).json({ success: false, error: "User tidak ditemukan" });
-          }
-    
-          if (users.delete_hash) {
-            try {
-            await deleteFromImgur(users.delete_hash);
-          } catch (imgurError) {
-            await transaction.rollback();
-            return res.status(500).json({ success: false, error: "Gagal menghapus gambar", details: imgurError.message });
-          }
-        }
-    
-          await users.destroy({ transaction });
-    
-          await transaction.commit();
-    
-          return res.status(200).json({ success: true, message: "User berhasil dihapus" });
-      } catch (error) {
-          if (transaction) {
-            await transaction.rollback();
-          }
-          return res.status(500).json({ success: false, error: error.message });
+        await deleteFromImgur(user.delete_hash);
+      } catch (imgurError) {
+        await transaction.rollback();
+        return res.status(500).json({ success: false, error: "Gagal menghapus gambar", details: imgurError.message });
       }
-    };
-
+    }
+    await user.destroy({ transaction });
+    await transaction.commit();
+    return res.status(200).json({ success: true, message: "User berhasil dihapus" });
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
 
 
 module.exports = {

@@ -77,7 +77,7 @@ const getUserList = async (req, res) => {
         {
           model: Movie,
           as: "movie",
-          attributes: ["id", "judul", "tahun_rilis", "rating", "cover_url"],
+          attributes: ["id", "judul", "tahun_rilis", "rating", "cover_url"]
         }
       ]
     });
