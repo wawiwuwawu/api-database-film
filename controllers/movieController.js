@@ -165,12 +165,26 @@ const createMovie = async (req, res) => {
 
 const getAllMovies = async (req, res) => {
   try {
-    const movie = await Movie.findAll();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25; // default 25 per page
+    const offset = (page - 1) * limit;
 
-    if (movie.length === 0) {
-      return res.status(200).json({ success: true, data: [], message: "Belum ada film tersimpan" });
-    }
-    return res.status(200).json({ success: true, data: movie });
+    const { count, rows: movies } = await Movie.findAndCountAll({
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: movies,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }

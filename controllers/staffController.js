@@ -63,8 +63,26 @@ const createStaff = async (req, res) => {
 
 const getAllStaff = async (req, res) => {
   try {
-    const staff = await Staff.findAll();
-    return res.status(200).json({ success: true, data: staff });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25; // default 25 per page
+    const offset = (page - 1) * limit;
+
+    const { count, rows: staff } = await Staff.findAndCountAll({
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: staff,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }

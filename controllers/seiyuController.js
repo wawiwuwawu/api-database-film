@@ -63,12 +63,29 @@ const createSeiyu = async (req, res) => {
 
 const getAllSeiyus = async (req, res) => {
   try {
-    const seiyus = await Seiyu.findAll();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25; // default 25 per page
+    const offset = (page - 1) * limit;
+
+    const { count, rows: seiyus } = await Seiyu.findAndCountAll({
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
+    });
 
     if (seiyus.length === 0) {
       return res.json({ success: true, data: [], message: "Belum ada seiyu tersimpan" });
     }
-    return res.status(200).json({ success: true, data: seiyus });
+    return res.status(200).json({
+      success: true,
+      data: seiyus,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
 }
