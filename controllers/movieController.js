@@ -192,7 +192,11 @@ const getAllMovies = async (req, res) => {
 
 const getAllMoviesDetail = async (req, res) => {
   try {
-    const movies = await Movie.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: movies } = await Movie.findAndCountAll({
       include: [
         { model: Genre, attributes: ['id', 'nama'], as : 'genres', through: { attributes: [] } },
         { model: Theme, attributes: ['id', 'nama'], as : 'themes', through: { attributes: [] } },
@@ -200,9 +204,20 @@ const getAllMoviesDetail = async (req, res) => {
         { model: Seiyu, attributes: ['id', 'name', 'profile_url'], through: { attributes: ['karakter_id'] }, as: 'seiyus', include: [{ model: Karakter, as: 'karakters', attributes: ['id', 'nama'], through: { attributes: [] } }] },
         { model: Karakter, attributes: ['id', 'nama', 'profile_url'], as : 'karakters', through: { attributes: [] } }
       ],
+      limit,
+      offset,
       order: [['created_at', 'DESC']]
     });
-    return res.status(200).json({ success: true, data: movies });
+    return res.status(200).json({
+      success: true,
+      data: movies,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -242,31 +257,39 @@ const getMovieByIdDetail = async (req, res) => {
 const getMovieByName = async (req, res) => {
   try {
     const { name } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
 
     if (!name) {
       return res.status(400).json({ success: false, error: "Nama film harus disertakan dalam query parameter" });
     }
 
-    const movies = await Movie.findAll({
+    const { count, rows: movies } = await Movie.findAndCountAll({
       where: sequelize.where(
         sequelize.fn('LOWER', sequelize.col('judul')),
         'LIKE',
         `%${name.toLowerCase()}%`
       ),
-      include: [
-        { model: Genre, attributes: ['id', 'nama'], as: 'genres', through: { attributes: [] } },
-        { model: Theme, attributes: ['id', 'nama'], as: 'themes', through: { attributes: [] } },
-        { model: Staff, attributes: ['id', 'name', 'role', 'profile_url'], as: 'staffs', through: { attributes: [] } },
-        { model: Seiyu, attributes: ['id', 'name', 'profile_url'], through: { attributes: ['karakter_id'] }, as: 'seiyus', include: [{ model: Karakter, as: 'karakters', attributes: ['id', 'nama'], through: { attributes: [] } }] },
-        { model: Karakter, attributes: ['id', 'nama', 'profile_url'], as: 'karakters', through: { attributes: [] } }
-      ]
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
     if (movies.length === 0) {
       return res.status(404).json({ success: false, error: "Film tidak ditemukan" });
     }
 
-    return res.status(200).json({ success: true, data: movies });
+    return res.status(200).json({
+      success: true,
+      data: movies,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }

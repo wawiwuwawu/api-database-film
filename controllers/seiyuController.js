@@ -64,7 +64,7 @@ const createSeiyu = async (req, res) => {
 const getAllSeiyus = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 25; // default 25 per page
+    const limit = parseInt(req.query.limit) || 25;
     const offset = (page - 1) * limit;
 
     const { count, rows: seiyus } = await Seiyu.findAndCountAll({
@@ -106,15 +106,30 @@ const getSeiyuById = async (req, res) => {
 
 const getAllSeiyusDetail = async (req, res) => {
   try {
-    const seiyu = await Seiyu.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: seiyu } = await Seiyu.findAndCountAll({
       include: [
         { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters", include: [{ model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }] },
         { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
-      ]
+      ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
-
-    return res.status(200).json({ success: true, data: seiyu });
+    return res.status(200).json({
+      success: true,
+      data: seiyu,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -140,12 +155,28 @@ const getSeiyusDetailById = async (req, res) => {
 
 const getAllSeiyusKarakter = async (req, res) => {
   try {
-    const seiyu = await Seiyu.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: seiyu } = await Seiyu.findAndCountAll({
       include: [
         { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters", include: [{ model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }] }
-      ]
+      ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
-    return res.status(200).json({ success: true, data: seiyu });
+    return res.status(200).json({
+      success: true,
+      data: seiyu,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -170,12 +201,28 @@ const getSeiyusKarakterById = async (req, res) => {
 
 const getAllSeiyusMovie = async (req, res) => {
   try {
-    const seiyu = await Seiyu.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: seiyu } = await Seiyu.findAndCountAll({
       include: [
         { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
-      ]
+      ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
-    return res.status(200).json({ success: true, data: seiyu });
+    return res.status(200).json({
+      success: true,
+      data: seiyu,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -201,28 +248,39 @@ const getSeiyusMovieById = async (req, res) => {
 const getSeiyuByName = async (req, res) => {
   try {
     const { name } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
 
     if (!name) {
       return res.status(400).json({ success: false, error: "Nama seiyu harus disertakan dalam query parameter" });
     }
 
-    const seiyus = await Seiyu.findAll({
+    const { count, rows: seiyus } = await Seiyu.findAndCountAll({
       where: sequelize.where(
         sequelize.fn('LOWER', sequelize.col('name')),
         'LIKE',
         `%${name.toLowerCase()}%`
       ),
-      include: [
-        { model: Karakter, through: { model: MovieSeiyu, attributes: [] }, as: "karakters" },
-        { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
-      ]
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
     if (seiyus.length === 0) {
       return res.status(404).json({ success: false, error: "Seiyu tidak ditemukan" });
     }
 
-    return res.status(200).json({ success: true, data: seiyus });
+    return res.status(200).json({
+      success: true,
+      data: seiyus,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }

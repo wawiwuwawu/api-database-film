@@ -64,7 +64,7 @@ const createStaff = async (req, res) => {
 const getAllStaff = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 25; // default 25 per page
+    const limit = parseInt(req.query.limit) || 25;
     const offset = (page - 1) * limit;
 
     const { count, rows: staff } = await Staff.findAndCountAll({
@@ -103,12 +103,28 @@ const getStaffById = async (req, res) => {
 
 const getAllStaffMovie = async (req, res) => {
   try {
-    const staff = await Staff.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: staff } = await Staff.findAndCountAll({
       include: [
         { model: Movie, through: { model: MovieStaff, attributes: [] }, as: 'movies' },
-      ]
+      ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
-    return res.status(200).json({ success: true, data: staff });
+    return res.status(200).json({
+      success: true,
+      data: staff,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -134,27 +150,39 @@ const getStaffMovieById = async (req, res) => {
 const getStaffByName = async (req, res) => {
   try {
     const { name } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
 
     if (!name) {
       return res.status(400).json({ success: false, error: "Nama staff harus disertakan dalam query parameter" });
     }
 
-    const staff = await Staff.findAll({
+    const { count, rows: staff } = await Staff.findAndCountAll({
       where: sequelize.where(
         sequelize.fn('LOWER', sequelize.col('name')),
         'LIKE',
         `%${name.toLowerCase()}%`
       ),
-      include: [
-        { model: Movie, through: { model: MovieStaff, attributes: [] }, as: 'movies' }
-      ]
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
     if (staff.length === 0) {
       return res.status(404).json({ success: false, error: "Staff tidak ditemukan" });
     }
 
-    return res.status(200).json({ success: true, data: staff });
+    return res.status(200).json({
+      success: true,
+      data: staff,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }

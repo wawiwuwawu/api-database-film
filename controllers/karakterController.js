@@ -62,13 +62,30 @@ const createKarakter = async (req, res) => {
 
 const getAllKarakter = async (req, res) => {
   try {
-    const karakter = await Karakter.findAll();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: karakter } = await Karakter.findAndCountAll({
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
+    });
 
     if (karakter.length === 0) {
       return res.json({ success: true, data: [], message: "Belum ada karakter tersimpan" });
     }
 
-    return res.status(200).json({ success: true, data: karakter });
+    return res.status(200).json({
+      success: true,
+      data: karakter,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -90,15 +107,30 @@ const getKarakterById = async (req, res) => {
 
 const getKarakterDetail = async (req, res) => {
   try {
-    const karakter = await Karakter.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: karakter } = await Karakter.findAndCountAll({
       include: [
         { model: Seiyu, through: { model: MovieSeiyu, attributes: [] }, as: "seiyus" },
         { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
-      ]
+      ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
-
-    return res.status(200).json({ success: true, data: karakter });
+    return res.status(200).json({
+      success: true,
+      data: karakter,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -126,14 +158,29 @@ const getKarakterDetailById = async (req, res) => {
 
 const getKarakterSeiyu = async (req, res) => {
   try {
-    const karakter = await Karakter.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: karakter } = await Karakter.findAndCountAll({
       include: [
         { model: Seiyu, through: { model: MovieSeiyu, attributes: [] }, as: "seiyus" }
-      ]
+      ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
-
-    return res.status(200).json({ success: true, data: karakter });
+    return res.status(200).json({
+      success: true,
+      data: karakter,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -160,14 +207,29 @@ const getKarakterSeiyuById = async (req, res) => {
 
 const getKarakterMovie = async (req, res) => {
   try {
-    const karakter = await Karakter.findAll({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: karakter } = await Karakter.findAndCountAll({
       include: [
         { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
-      ]
+      ],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
-
-    return res.status(200).json({ success: true, data: karakter });
+    return res.status(200).json({
+      success: true,
+      data: karakter,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -195,38 +257,39 @@ const getKarakterMovieById = async (req, res) => {
 const getKarakterByName = async (req, res) => {
   try {
     const { name } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
 
     if (!name) {
       return res.status(400).json({ success: false, error: "Nama karakter harus disertakan dalam query parameter" });
     }
 
-    const karakter = await Karakter.findAll({
+    const { count, rows: karakter } = await Karakter.findAndCountAll({
       where: sequelize.where(
         sequelize.fn('LOWER', sequelize.col('nama')),
         'LIKE',
         `%${name.toLowerCase()}%`
       ),
-      include: [
-        {
-          model: Seiyu,
-          through: { model: MovieSeiyu, attributes: [] },
-          as: "seiyus",
-          attributes: ["id", "name", "profile_url"]
-        },
-        {
-          model: Movie,
-          through: { model: MovieSeiyu, attributes: [] },
-          as: "movies",
-          attributes: ["id", "judul", "tahun_rilis"]
-        }
-      ]
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
     });
 
     if (karakter.length === 0) {
       return res.status(404).json({ success: false, error: "Karakter tidak ditemukan" });
     }
 
-    return res.status(200).json({ success: true, data: karakter });
+    return res.status(200).json({
+      success: true,
+      data: karakter,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
