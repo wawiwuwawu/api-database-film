@@ -20,7 +20,7 @@
     "googleapis": "^148.0.0",
     "imgur": "^1.0.2",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.2",
+    "multer": "^2.0.1",
     "mysql2": "^3.14.0",
     "sequelize": "^6.37.7"
   }
