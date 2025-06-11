@@ -68,8 +68,7 @@ const getAllKarakter = async (req, res) => {
 
     const { count, rows: karakter } = await Karakter.findAndCountAll({
       limit,
-      offset,
-      order: [['createdAt', 'DESC']]
+      offset
     });
 
     if (karakter.length === 0) {
@@ -117,8 +116,7 @@ const getKarakterDetail = async (req, res) => {
         { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
       ],
       limit,
-      offset,
-      order: [['createdAt', 'DESC']]
+      offset
     });
 
     return res.status(200).json({
@@ -167,8 +165,7 @@ const getKarakterSeiyu = async (req, res) => {
         { model: Seiyu, through: { model: MovieSeiyu, attributes: [] }, as: "seiyus" }
       ],
       limit,
-      offset,
-      order: [['createdAt', 'DESC']]
+      offset
     });
 
     return res.status(200).json({
@@ -216,8 +213,7 @@ const getKarakterMovie = async (req, res) => {
         { model: Movie, through: { model: MovieSeiyu, attributes: [] }, as: "movies" }
       ],
       limit,
-      offset,
-      order: [['createdAt', 'DESC']]
+      offset
     });
 
     return res.status(200).json({
@@ -272,8 +268,7 @@ const getKarakterByName = async (req, res) => {
         `%${name.toLowerCase()}%`
       ),
       limit,
-      offset,
-      order: [['createdAt', 'DESC']]
+      offset
     });
 
     if (karakter.length === 0) {
