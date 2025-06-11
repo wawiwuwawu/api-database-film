@@ -69,7 +69,7 @@ const getAllKarakter = async (req, res) => {
     const { count, rows: karakter } = await Karakter.findAndCountAll({
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     if (karakter.length === 0) {
@@ -118,7 +118,7 @@ const getKarakterDetail = async (req, res) => {
       ],
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     return res.status(200).json({
@@ -168,7 +168,7 @@ const getKarakterSeiyu = async (req, res) => {
       ],
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     return res.status(200).json({
@@ -217,7 +217,7 @@ const getKarakterMovie = async (req, res) => {
       ],
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     return res.status(200).json({
@@ -273,7 +273,7 @@ const getKarakterByName = async (req, res) => {
       ),
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     if (karakter.length === 0) {

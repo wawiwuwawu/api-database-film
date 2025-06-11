@@ -70,7 +70,7 @@ const getAllSeiyus = async (req, res) => {
     const { count, rows: seiyus } = await Seiyu.findAndCountAll({
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     if (seiyus.length === 0) {
@@ -117,7 +117,7 @@ const getAllSeiyusDetail = async (req, res) => {
       ],
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     return res.status(200).json({
@@ -165,7 +165,7 @@ const getAllSeiyusKarakter = async (req, res) => {
       ],
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
     return res.status(200).json({
       success: true,
@@ -211,7 +211,7 @@ const getAllSeiyusMovie = async (req, res) => {
       ],
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
     return res.status(200).json({
       success: true,
@@ -264,7 +264,7 @@ const getSeiyuByName = async (req, res) => {
       ),
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     if (seiyus.length === 0) {

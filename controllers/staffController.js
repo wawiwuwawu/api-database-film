@@ -70,7 +70,7 @@ const getAllStaff = async (req, res) => {
     const { count, rows: staff } = await Staff.findAndCountAll({
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     return res.status(200).json({
@@ -113,7 +113,7 @@ const getAllStaffMovie = async (req, res) => {
       ],
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
     return res.status(200).json({
       success: true,
@@ -166,7 +166,7 @@ const getStaffByName = async (req, res) => {
       ),
       limit,
       offset,
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     if (staff.length === 0) {
