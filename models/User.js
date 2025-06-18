@@ -56,6 +56,14 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       delete_hash: DataTypes.STRING(255),
+      otp: {
+      type: DataTypes.STRING(6),
+      allowNull: true,
+    },
+      otpExpires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),

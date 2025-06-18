@@ -3,6 +3,7 @@ const admin = require('../config/firebase');
 const { validationResult } = require('express-validator');
 const { User, sequelize } = require('../models');
 const { deleteFromImgur, uploadToImgur } = require('../config/imgur');
+const { sendOTPEmail } = require('../config/otp_email');
 
 
 const registerUser = async (req, res) => {
@@ -233,6 +234,65 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const otp_emails = async (req, res) => {
+
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email diperlukan dalam body request.' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    try {
+        await sendOTPEmail(email, otp);
+        res.status(200).json({ message: `OTP berhasil dikirim ke ${email}` });
+    } catch (error) {
+
+        res.status(500).json({ message: error.message || 'Terjadi kesalahan pada server.' });
+    }
+};
+
+const verifyOtpAndLogin = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Email diperlukan." });
+        }
+        // Cari user berdasarkan email
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ message: "User tidak ditemukan." });
+        }
+        // Jika admin, langsung login tanpa OTP
+        if (user.role === 'admin') {
+            const token = jwt.sign(
+                { userId: user.id, role: user.role },
+                process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini',
+                { expiresIn: '1h' }
+            );
+            return res.status(200).json({ message: "Login admin berhasil!", token });
+        }
+        // Untuk user biasa, cek OTP dan expired
+        if (!otp || !user.otp || !user.otpExpires || user.otp !== otp || new Date() > user.otpExpires) {
+            return res.status(400).json({ message: "OTP salah atau sudah kadaluarsa." });
+        }
+        // OTP valid, generate JWT
+        const token = jwt.sign(
+            { userId: user.id, role: user.role },
+            process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini',
+            { expiresIn: '1h' }
+        );
+        // Kosongkan OTP agar tidak bisa dipakai ulang
+        user.otp = null;
+        user.otpExpires = null;
+        await user.save();
+        res.status(200).json({ message: "Login berhasil!", token });
+    } catch (error) {
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
+    }
+};
+
 
 module.exports = {
   registerUser,
@@ -241,5 +301,7 @@ module.exports = {
   getUserById,
   getCurrentUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  otp_emails,
+  verifyOtpAndLogin
 };

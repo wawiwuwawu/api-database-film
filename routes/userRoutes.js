@@ -14,11 +14,14 @@ const {
     getUserById,
     getCurrentUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    otp_emails,
+    verifyOtpAndLogin
 } = require('../controllers/userController');
 
 const { validateRegistration, validateLogin } = require('../middlewares/validation');
 const rateLimit = require('express-rate-limit');
+const { sendOTPEmail } = require('../config/otp_email');
 
 const limiter = rateLimit({
   windowMs: 60 * 1000,
@@ -48,5 +51,7 @@ router.get('/', getAllUser);
 router.get('/me', authGuard, getCurrentUser);
 router.get('/:id', authGuard, adminOnly, getUserById);
 router.delete('/:id', deleteUser);
+router.post('/send-otp', otp_emails);
+router.post('/verify-otp', verifyOtpAndLogin);
 
 module.exports = router;
