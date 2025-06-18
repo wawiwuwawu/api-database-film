@@ -235,21 +235,27 @@ const deleteUser = async (req, res) => {
 };
 
 const otp_emails = async (req, res) => {
-
-    const { email } = req.body;
-
-    if (!email) {
-        return res.status(400).json({ message: 'Email diperlukan dalam body request.' });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
     try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email diperlukan.' });
+        }
+        // Cari user, jika belum ada buat user baru dengan role customer
+        const [user, created] = await User.findOrCreate({
+            where: { email: email },
+            defaults: { role: 'customer' }
+        });
+        if (user.role === 'admin') {
+            return res.status(400).json({ success: false, message: 'Admin tidak memerlukan OTP.' });
+        }
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiryTime = new Date(new Date().getTime() + 5 * 60000); // 5 menit
+        await user.update({ otp: otp, otpExpires: expiryTime });
         await sendOTPEmail(email, otp);
-        res.status(200).json({ message: `OTP berhasil dikirim ke ${email}` });
+        res.status(200).json({ success: true, message: `OTP berhasil dikirim ke ${email}.` });
     } catch (error) {
-
-        res.status(500).json({ message: error.message || 'Terjadi kesalahan pada server.' });
+        console.error("Error di fungsi otp_emails:", error);
+        res.status(500).json({ success: false, message: "Terjadi kesalahan pada server." });
     }
 };
 
@@ -257,12 +263,12 @@ const verifyOtpAndLogin = async (req, res) => {
     try {
         const { email, otp } = req.body;
         if (!email) {
-            return res.status(400).json({ message: "Email diperlukan." });
+            return res.status(400).json({ success: false, message: "Email diperlukan." });
         }
         // Cari user berdasarkan email
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan." });
+            return res.status(404).json({ success: false, message: "User tidak ditemukan." });
         }
         // Jika admin, langsung login tanpa OTP
         if (user.role === 'admin') {
@@ -271,11 +277,15 @@ const verifyOtpAndLogin = async (req, res) => {
                 process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini',
                 { expiresIn: '1h' }
             );
-            return res.status(200).json({ message: "Login admin berhasil!", token });
+            return res.status(200).json({ success: true, message: "Login admin berhasil!", token });
         }
         // Untuk user biasa, cek OTP dan expired
         if (!otp || !user.otp || !user.otpExpires || user.otp !== otp || new Date() > user.otpExpires) {
-            return res.status(400).json({ message: "OTP salah atau sudah kadaluarsa." });
+            // Kosongkan OTP jika salah/expired (opsional, tingkatkan keamanan)
+            user.otp = null;
+            user.otpExpires = null;
+            await user.save();
+            return res.status(400).json({ success: false, message: "OTP salah atau sudah kadaluarsa." });
         }
         // OTP valid, generate JWT
         const token = jwt.sign(
@@ -287,9 +297,10 @@ const verifyOtpAndLogin = async (req, res) => {
         user.otp = null;
         user.otpExpires = null;
         await user.save();
-        res.status(200).json({ message: "Login berhasil!", token });
+        res.status(200).json({ success: true, message: "Login berhasil!", token });
     } catch (error) {
-        res.status(500).json({ message: "Terjadi kesalahan pada server." });
+        console.error("Error di fungsi verifyOtpAndLogin:", error);
+        res.status(500).json({ success: false, message: "Terjadi kesalahan pada server." });
     }
 };
 
