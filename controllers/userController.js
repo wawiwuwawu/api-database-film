@@ -21,7 +21,25 @@ const registerUser = async (req, res) => {
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(409).json({ success: false, message: "Email sudah terdaftar" });
+        if (existingUser.isVerified) {
+            // Kasus 1: User sudah ada DAN sudah terverifikasi. Tolak registrasi.
+            return res.status(409).json({ message: 'Email sudah terdaftar. Silakan login.' });
+        } else {
+            // Kasus 2: User sudah ada TAPI belum terverifikasi.
+            // Bantu user dengan mengirim ulang OTP.
+            console.log(`Email ${email} mencoba mendaftar ulang, mengirim ulang OTP...`);
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiryTime = new Date(new Date().getTime() + 5 * 60000);
+
+            // Update OTP di record user yang sudah ada
+            await existingUser.update({ otp: otp, otpExpires: expiryTime });
+
+            // Kirim email OTP
+            await sendOTPEmail(email, otp);
+
+            // Kirim respons sukses agar Flutter bisa lanjut ke halaman verifikasi
+            return res.status(200).json({ message: 'Email sudah terdaftar tapi belum aktif. Kode verifikasi baru telah dikirim.' });
+        }
     }
 
     // Generate OTP dan expired
