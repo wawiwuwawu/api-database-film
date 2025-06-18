@@ -313,6 +313,42 @@ const verifyOtpAndLogin = async (req, res) => {
     }
 };
 
+const resendOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: 'Email diperlukan.' });
+        }
+
+        // 1. Cari user yang sudah ada di database
+        const user = await User.findOne({ where: { email: email } });
+        if (!user) {
+            // Jika karena suatu hal user tidak ditemukan, kirim error
+            return res.status(404).json({ message: 'Email ini tidak terdaftar.' });
+        }
+
+        // 2. Buat OTP baru dan waktu kedaluwarsa baru
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiryTime = new Date(new Date().getTime() + 5 * 60000); // 5 menit dari sekarang
+
+        // 3. Update record user tersebut dengan OTP yang baru
+        await user.update({
+            otp: otp,
+            otpExpires: expiryTime
+        });
+
+        // 4. Kirim email berisi OTP yang baru
+        await sendOTPEmail(email, otp);
+
+        // 5. Kirim respons sukses
+        res.status(200).json({ message: 'Kode OTP baru telah berhasil dikirim ulang.' });
+
+    } catch (error) {
+        console.error("Error di fungsi resendOtp:", error);
+        res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
+    }
+};
+
 
 module.exports = {
   registerUser,
@@ -322,5 +358,6 @@ module.exports = {
   getCurrentUser,
   updateUser,
   deleteUser,
-  verifyOtpAndLogin
+  verifyOtpAndLogin,
+  resendOtp
 };
