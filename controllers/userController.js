@@ -50,7 +50,8 @@ const registerUser = async (req, res) => {
       data: {
         id: newUser.id,
         name: newUser.name,
-        email: newUser.email
+        email: newUser.email,
+        role: newUser.role
       }
     });
 
