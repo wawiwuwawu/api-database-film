@@ -79,6 +79,13 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Kredensial tidak valid' });
     }
 
+    if (!user.isVerified) {
+        return res.status(403).json({ 
+            message: 'Akun Anda belum diverifikasi. Silakan cek email Anda untuk kode OTP.',
+            resendOtp: true 
+        });
+    }
+
     const payload = { userId: user.id, role: user.role };
     const token = jwt.sign(
       payload,
@@ -267,16 +274,20 @@ const verifyOtpAndLogin = async (req, res) => {
             await user.destroy();
             return res.status(400).json({ success: false, message: "OTP salah atau sudah kadaluarsa. Akun Anda telah dihapus, silakan registrasi ulang." });
         }
-        // OTP valid, generate JWT
+
+        // OTP valid, update status verifikasi dan kosongkan OTP
+        await user.update({
+          otp: null,
+          otpExpires: null,
+          isVerified: true
+        });
+
+        // Generate JWT token
         const token = jwt.sign(
             { userId: user.id, role: user.role },
             process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini',
             { expiresIn: '1h' }
         );
-        // Kosongkan OTP agar tidak bisa dipakai ulang
-        user.otp = null;
-        user.otpExpires = null;
-        await user.save();
         res.status(200).json({ success: true, message: "Login berhasil!", token });
     } catch (error) {
         console.error("Error di fungsi verifyOtpAndLogin:", error);

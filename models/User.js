@@ -59,11 +59,16 @@ module.exports = (sequelize, DataTypes) => {
       otp: {
       type: DataTypes.STRING(6),
       allowNull: true,
-    },
+      },
       otpExpires: {
       type: DataTypes.DATE,
       allowNull: true,
-    },
+      },
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+      },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
