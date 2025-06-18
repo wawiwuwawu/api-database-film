@@ -24,18 +24,15 @@ const registerUser = async (req, res) => {
       return res.status(409).json({ success: false, message: "Email sudah terdaftar" });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
     // Generate OTP dan expired
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiryTime = new Date(new Date().getTime() + 10 * 60000);
 
+    // Tidak perlu hash password di sini, model User sudah melakukan hash otomatis lewat hook
     const newUser = await User.create({
       name,
       email,
-      password: hashedPassword,
+      password, // password asli, hash dilakukan di model
       role: 'customer',
       otp: otp,
       otpExpires: expiryTime
@@ -266,11 +263,9 @@ const verifyOtpAndLogin = async (req, res) => {
         }
         // Untuk user biasa, cek OTP dan expired
         if (!otp || !user.otp || !user.otpExpires || user.otp !== otp || new Date() > user.otpExpires) {
-            // Kosongkan OTP jika salah/expired (opsional, tingkatkan keamanan)
-            user.otp = null;
-            user.otpExpires = null;
-            await user.save();
-            return res.status(400).json({ success: false, message: "OTP salah atau sudah kadaluarsa." });
+            // Hapus user jika OTP gagal diverifikasi
+            await user.destroy();
+            return res.status(400).json({ success: false, message: "OTP salah atau sudah kadaluarsa. Akun Anda telah dihapus, silakan registrasi ulang." });
         }
         // OTP valid, generate JWT
         const token = jwt.sign(
