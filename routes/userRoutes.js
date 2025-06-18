@@ -16,7 +16,9 @@ const {
     updateUser,
     deleteUser,
     verifyOtpAndLogin,
-    resendOtp
+    resendOtp,
+    forgotPassword,
+    resetPassword
 } = require('../controllers/userController');
 
 const { validateRegistration, validateLogin } = require('../middlewares/validation');
@@ -53,5 +55,7 @@ router.get('/:id', authGuard, adminOnly, getUserById);
 router.delete('/:id', deleteUser);
 router.post('/verify-otp', verifyOtpAndLogin);
 router.post('/resend-otp', resendOtp);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 module.exports = router;

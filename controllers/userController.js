@@ -349,6 +349,72 @@ const resendOtp = async (req, res) => {
     }
 };
 
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: 'Email diperlukan.' });
+        }
+
+        const user = await User.findOne({ where: { email: email } });
+
+        if (!user) {
+            console.log(`Permintaan reset password untuk email tidak terdaftar: ${email}`);
+            return res.status(200).json({ message: 'Jika email Anda terdaftar, Anda akan menerima kode reset password.' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiryTime = new Date(new Date().getTime() + 5 * 60000);
+
+        await user.update({ otp: otp, otpExpires: expiryTime });
+
+        await sendOTPEmail(email, otp, "Reset Password");
+
+        res.status(200).json({ message: 'Jika email Anda terdaftar, Anda akan menerima kode reset password.' });
+
+    } catch (error) {
+        console.error("Error di forgotPassword:", error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ message: "Email, OTP, dan password baru diperlukan." });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "Password baru minimal 6 karakter." });
+        }
+
+        // 1. Cari user
+        const user = await User.findOne({ where: { email: email } });
+
+        // 2. Verifikasi OTP (sama seperti di fungsi login)
+        if (!user || user.otp !== otp || user.otpExpires < new Date()) {
+            return res.status(400).json({ message: "Kode OTP salah, tidak valid, atau telah kedaluwarsa." });
+        }
+
+        // 3. Jika OTP benar, hash password baru
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // 4. Update password di database dan hapus OTP
+        await user.update({
+            password: hashedPassword,
+            otp: null,
+            otpExpires: null
+        });
+
+        res.status(200).json({ message: "Password Anda telah berhasil direset. Silakan login." });
+
+    } catch (error) {
+        console.error("Error di resetPassword:", error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
+    }
+};
+
+
 
 module.exports = {
   registerUser,
@@ -359,5 +425,7 @@ module.exports = {
   updateUser,
   deleteUser,
   verifyOtpAndLogin,
-  resendOtp
+  resendOtp,
+  forgotPassword,
+  resetPassword
 };
