@@ -15,7 +15,6 @@ const {
     getCurrentUser,
     updateUser,
     deleteUser,
-    otp_emails,
     verifyOtpAndLogin
 } = require('../controllers/userController');
 
@@ -51,7 +50,6 @@ router.get('/', getAllUser);
 router.get('/me', authGuard, getCurrentUser);
 router.get('/:id', authGuard, adminOnly, getUserById);
 router.delete('/:id', deleteUser);
-router.post('/send-otp', otp_emails);
 router.post('/verify-otp', verifyOtpAndLogin);
 
 module.exports = router;

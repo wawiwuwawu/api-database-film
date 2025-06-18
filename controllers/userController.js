@@ -3,7 +3,8 @@ const admin = require('../config/firebase');
 const { validationResult } = require('express-validator');
 const { User, sequelize } = require('../models');
 const { deleteFromImgur, uploadToImgur } = require('../config/imgur');
-const { sendOTPEmail } = require('../config/otp_email');
+const { sendOTPEmail } = require('../config/otp_email'); // Uncomment if you use OTP email
+const bcrypt = require('bcrypt');
 
 
 const registerUser = async (req, res) => {
@@ -14,35 +15,43 @@ const registerUser = async (req, res) => {
     }
 
     const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: "Nama, email, dan password wajib diisi." });
+    }
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(409).json({ success: false, message: "Email sudah terdaftar" });
     }
 
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Generate OTP dan expired
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiryTime = new Date(new Date().getTime() + 10 * 60000);
+
     const newUser = await User.create({
       name,
       email,
-      password,
-      profile_url,
-      role: 'customer'
+      password: hashedPassword,
+      role: 'customer',
+      otp: otp,
+      otpExpires: expiryTime
     });
 
-    const token = jwt.sign(
-      { userId: newUser.id, role: newUser.role },
-      process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini',
-      { expiresIn: '1h' }
-    );
+    // Kirim OTP ke email user
+    await sendOTPEmail(email, otp);
 
     return res.status(201).json({ 
       success: true, 
-      message: 'Registrasi berhasil',
+      message: 'Registrasi berhasil, silakan verifikasi OTP yang dikirim ke email Anda.',
       data: {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email
-      },
-      token
+      }
     });
 
   } catch (error) {
@@ -234,31 +243,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const otp_emails = async (req, res) => {
-    try {
-        const { email } = req.body;
-        if (!email) {
-            return res.status(400).json({ success: false, message: 'Email diperlukan.' });
-        }
-        // Cari user, jika belum ada buat user baru dengan role customer
-        const [user, created] = await User.findOrCreate({
-            where: { email: email },
-            defaults: { role: 'customer' }
-        });
-        if (user.role === 'admin') {
-            return res.status(400).json({ success: false, message: 'Admin tidak memerlukan OTP.' });
-        }
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiryTime = new Date(new Date().getTime() + 5 * 60000); // 5 menit
-        await user.update({ otp: otp, otpExpires: expiryTime });
-        await sendOTPEmail(email, otp);
-        res.status(200).json({ success: true, message: `OTP berhasil dikirim ke ${email}.` });
-    } catch (error) {
-        console.error("Error di fungsi otp_emails:", error);
-        res.status(500).json({ success: false, message: "Terjadi kesalahan pada server." });
-    }
-};
-
 const verifyOtpAndLogin = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -313,6 +297,5 @@ module.exports = {
   getCurrentUser,
   updateUser,
   deleteUser,
-  otp_emails,
   verifyOtpAndLogin
 };
