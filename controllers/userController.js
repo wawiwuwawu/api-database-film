@@ -396,12 +396,9 @@ const resetPassword = async (req, res) => {
             return res.status(400).json({ message: "Kode OTP salah, tidak valid, atau telah kedaluwarsa." });
         }
 
-        // 3. Jika OTP benar, hash password baru
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        // 4. Update password di database dan hapus OTP
+        // 3. Jika OTP benar, update password baru (hash otomatis oleh model)
         await user.update({
-            password: hashedPassword,
+            password: newPassword,
             otp: null,
             otpExpires: null
         });
