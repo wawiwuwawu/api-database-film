@@ -22,41 +22,34 @@ const registerUser = async (req, res) => {
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
         if (existingUser.isVerified) {
-            // Kasus 1: User sudah ada DAN sudah terverifikasi. Tolak registrasi.
+
             return res.status(409).json({ message: 'Email sudah terdaftar. Silakan login.' });
         } else {
-            // Kasus 2: User sudah ada TAPI belum terverifikasi.
-            // Bantu user dengan mengirim ulang OTP.
+
             console.log(`Email ${email} mencoba mendaftar ulang, mengirim ulang OTP...`);
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
             const expiryTime = new Date(new Date().getTime() + 5 * 60000);
 
-            // Update OTP di record user yang sudah ada
             await existingUser.update({ otp: otp, otpExpires: expiryTime });
 
-            // Kirim email OTP
             await sendOTPEmail(email, otp);
 
-            // Kirim respons sukses agar Flutter bisa lanjut ke halaman verifikasi
             return res.status(200).json({ message: 'Email sudah terdaftar tapi belum aktif. Kode verifikasi baru telah dikirim.' });
         }
     }
 
-    // Generate OTP dan expired
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiryTime = new Date(new Date().getTime() + 10 * 60000);
 
-    // Tidak perlu hash password di sini, model User sudah melakukan hash otomatis lewat hook
     const newUser = await User.create({
       name,
       email,
-      password, // password asli, hash dilakukan di model
+      password,
       role: 'customer',
       otp: otp,
       otpExpires: expiryTime
     });
 
-    // Kirim OTP ke email user
     await sendOTPEmail(email, otp);
 
     return res.status(201).json({ 
@@ -163,7 +156,7 @@ const getCurrentUser = async (req, res) => {
   const userId = req.user.userId;
 
   const user = await User.findByPk(userId, {
-    attributes: ['id','name','email','role','profile_url']
+    attributes: ['id','name','email','role', 'bio','profile_url']
   });
 
   return res.json({ success: true, data: user });
@@ -411,6 +404,104 @@ const resetPassword = async (req, res) => {
     }
 };
 
+const updateCurrentUser = async (req, res) => {
+  const error = validationResult(req);
+  if (!error.isEmpty()) {
+    return res.status(400).json({ success: false, message: "Format salah", error: error.array() });
+  }
+
+  if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
+    return res.status(400).json({ success: false, error: 'Format file harus JPG/PNG' });
+  }
+
+  const transaction = await sequelize.transaction();
+  try {
+    const userId = req.user.userId;
+    const user = await User.findByPk(userId, { transaction });
+    if (!user) {
+      await transaction.rollback();
+      return res.status(404).json({ success: false, error: "User tidak ditemukan" });
+    }
+
+    // Cek duplikasi nama jika diubah
+    if (req.body.name && req.body.name !== user.name) {
+      const exists = await User.findOne({
+        where: sequelize.where(
+          sequelize.fn('LOWER', sequelize.col('name')),
+          sequelize.fn('LOWER', req.body.name)
+        ),
+        transaction
+      });
+      if (exists) {
+        await transaction.rollback();
+        return res.status(409).json({ success: false, error: "Nama user sudah terdaftar" });
+      }
+    }
+
+    let imgurData = {};
+    if (req.file) {
+      if (user.delete_hash) {
+        try {
+          await deleteFromImgur(user.delete_hash);
+        } catch (error) {
+          console.warn('Gagal hapus gambar lama di imgur:', error);
+        }
+      }
+      try {
+        imgurData = await uploadToImgur({ buffer: req.file.buffer });
+      } catch (error) {
+        await transaction.rollback();
+        return res.status(500).json({ success: false, error: `Gagal upload gambar baru: ${error.message}` });
+      }
+    }
+
+    const updateData = { ...req.body };
+    if (req.file) {
+      updateData.profile_url = imgurData.image_url;
+      updateData.delete_hash = imgurData.delete_hash;
+    } else {
+      delete updateData.profile_url;
+      delete updateData.delete_hash;
+    }
+
+    await user.update(updateData, { transaction });
+    await transaction.commit();
+
+    const updatedUser = await User.findByPk(userId);
+    return res.status(200).json({ success: true, data: updatedUser });
+  } catch (error) {
+    await transaction.rollback();
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+const deleteCurrentUser = async (req, res) => {
+  let transaction;
+  try {
+    const userId = req.user.userId;
+    transaction = await sequelize.transaction();
+    const user = await User.findByPk(userId, { transaction });
+    if (!user) {
+      await transaction.rollback();
+      return res.status(404).json({ success: false, error: "User tidak ditemukan" });
+    }
+    if (user.delete_hash) {
+      try {
+        await deleteFromImgur(user.delete_hash);
+      } catch (imgurError) {
+        await transaction.rollback();
+        return res.status(500).json({ success: false, error: "Gagal menghapus gambar", details: imgurError.message });
+      }
+    }
+    await user.destroy({ transaction });
+    await transaction.commit();
+    return res.status(200).json({ success: true, message: "User berhasil dihapus" });
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 
 
 module.exports = {
@@ -424,5 +515,7 @@ module.exports = {
   verifyOtpAndLogin,
   resendOtp,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  updateCurrentUser,
+  deleteCurrentUser
 };

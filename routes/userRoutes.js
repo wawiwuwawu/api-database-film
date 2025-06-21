@@ -18,7 +18,9 @@ const {
     verifyOtpAndLogin,
     resendOtp,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    updateCurrentUser,
+    deleteCurrentUser
 } = require('../controllers/userController');
 
 const { validateRegistration, validateLogin } = require('../middlewares/validation');
@@ -48,11 +50,13 @@ router.use(limiterPerSecond);
 
 router.post('/register', validateRegistration, registerUser);
 router.post('/login', validateLogin, loginUser);
-router.put('/:id', upload.single('file'), updateUser);
+router.put('/:id', authGuard, adminOnly, upload.single('file'), updateUser);
 router.get('/', getAllUser);
+router.put('/me', authGuard, upload.single('file'), updateCurrentUser);
 router.get('/me', authGuard, getCurrentUser);
+router.delete('/me', authGuard, deleteCurrentUser);
 router.get('/:id', authGuard, adminOnly, getUserById);
-router.delete('/:id', deleteUser);
+router.delete('/:id', authGuard, adminOnly,deleteUser);
 router.post('/verify-otp', verifyOtpAndLogin);
 router.post('/resend-otp', resendOtp);
 router.post('/forgot-password', forgotPassword);
