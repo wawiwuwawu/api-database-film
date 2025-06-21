@@ -423,57 +423,64 @@ const updateCurrentUser = async (req, res) => {
       return res.status(404).json({ success: false, error: "User tidak ditemukan" });
     }
 
-    // Cek duplikasi nama jika diubah
-    if (req.body.name && req.body.name !== user.name) {
+    // Ambil hanya field yang diizinkan dari body (Pencegahan Mass Assignment)
+    const { name, bio } = req.body;
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (bio !== undefined) updateData.bio = bio;
+
+    // Pengecekan nama unik yang disempurnakan
+    if (name && name !== user.name) {
       const exists = await User.findOne({
         where: sequelize.where(
           sequelize.fn('LOWER', sequelize.col('name')),
-          sequelize.fn('LOWER', req.body.name)
+          sequelize.fn('LOWER', name)
         ),
         transaction
       });
-      if (exists) {
+      // Pastikan nama itu ada DAN bukan milik user saat ini
+      if (exists && exists.id !== userId) {
         await transaction.rollback();
         return res.status(409).json({ success: false, error: "Nama user sudah terdaftar" });
       }
     }
 
-    let imgurData = {};
+    // Logika upload gambar (sudah bagus, tidak perlu diubah)
     if (req.file) {
       if (user.delete_hash) {
         try {
           await deleteFromImgur(user.delete_hash);
         } catch (error) {
-          console.warn('Gagal hapus gambar lama di imgur:', error);
+          console.warn('Gagal hapus gambar lama di imgur:', error.message);
         }
       }
       try {
-        imgurData = await uploadToImgur({ buffer: req.file.buffer });
+        const imgurData = await uploadToImgur({ buffer: req.file.buffer });
+        updateData.profile_url = imgurData.image_url;
+        updateData.delete_hash = imgurData.delete_hash;
       } catch (error) {
         await transaction.rollback();
         return res.status(500).json({ success: false, error: `Gagal upload gambar baru: ${error.message}` });
       }
     }
 
-    const updateData = { ...req.body };
-    if (req.file) {
-      updateData.profile_url = imgurData.image_url;
-      updateData.delete_hash = imgurData.delete_hash;
-    } else {
-      delete updateData.profile_url;
-      delete updateData.delete_hash;
-    }
-
-    await user.update(updateData, { transaction });
+    // Lakukan update dengan data yang sudah difilter
+    await user.update(updateData, { transaction, fields: Object.keys(updateData) });
     await transaction.commit();
 
-    const updatedUser = await User.findByPk(userId);
+    // Mengambil data terbaru setelah commit (sudah bagus)
+    const updatedUser = await User.findByPk(userId, {
+        attributes: ['id', 'name', 'email', 'role', 'bio', 'profile_url'] // Sebutkan atribut lagi untuk konsistensi
+    });
+
     return res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
     await transaction.rollback();
-    return res.status(500).json({ success: false, error: error.message });
+    console.error("Error updating user:", error); // Tambahkan console.error untuk debugging
+    return res.status(500).json({ success: false, error: "Terjadi kesalahan pada server." });
   }
 };
+
 
 const deleteCurrentUser = async (req, res) => {
   let transaction;
