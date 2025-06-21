@@ -100,8 +100,8 @@ const loginUser = async (req, res) => {
     const payload = { userId: user.id, role: user.role };
     const token = jwt.sign(
       payload,
-      process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini',
-      { expiresIn: '1h' }
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
     );
 
     return res.status(200).json({ success: true, message: 'Login berhasil',
