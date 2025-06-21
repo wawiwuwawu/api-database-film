@@ -50,11 +50,11 @@ router.use(limiterPerSecond);
 
 router.post('/register', validateRegistration, registerUser);
 router.post('/login', validateLogin, loginUser);
-router.put('/:id', authGuard, adminOnly, upload.single('file'), updateUser);
 router.get('/', getAllUser);
-router.put('/me', authGuard, upload.single('file'), updateCurrentUser);
 router.get('/me', authGuard, getCurrentUser);
+router.put('/me', authGuard, upload.single('file'), updateCurrentUser);
 router.delete('/me', authGuard, deleteCurrentUser);
+router.put('/:id', authGuard, adminOnly, upload.single('file'), updateUser);
 router.get('/:id', authGuard, adminOnly, getUserById);
 router.delete('/:id', authGuard, adminOnly,deleteUser);
 router.post('/verify-otp', verifyOtpAndLogin);
