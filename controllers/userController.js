@@ -100,8 +100,8 @@ const loginUser = async (req, res) => {
     const payload = { userId: user.id, role: user.role };
     const token = jwt.sign(
       payload,
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
+      process.env.JWT_SECRET
+      // expiresIn dihapus agar token tidak expired
     );
 
     return res.status(200).json({ success: true, message: 'Login berhasil',
@@ -274,8 +274,8 @@ const verifyOtpAndLogin = async (req, res) => {
         if (user.role === 'admin') {
             const token = jwt.sign(
                 { userId: user.id, role: user.role },
-                process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini',
-                { expiresIn: '1h' }
+                process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini'
+                // expiresIn dihapus agar token tidak expired
             );
             return res.status(200).json({ success: true, message: "Login admin berhasil!", token });
         }
@@ -296,8 +296,8 @@ const verifyOtpAndLogin = async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: user.id, role: user.role },
-            process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini',
-            { expiresIn: '1h' }
+            process.env.JWT_SECRET || 'rahasia_sangat_kuat_disini'
+            // expiresIn dihapus agar token tidak expired
         );
         res.status(200).json({ success: true, message: "Login berhasil!", token });
     } catch (error) {
