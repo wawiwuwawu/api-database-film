@@ -267,7 +267,7 @@ const getMovieByName = async (req, res) => {
     }
 
     const { count, rows: movies } = await Movie.findAndCountAll({
-      attributes: ['id', 'judul', 'cover_url'],
+      attributes: ['id', 'judul', 'tahun_rilis', 'type', 'rating', 'cover_url'],
       where: sequelize.where(
         sequelize.fn('LOWER', sequelize.col('judul')),
         'LIKE',
