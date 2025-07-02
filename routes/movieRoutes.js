@@ -17,6 +17,9 @@ const {
   getMovieByIdDetail,
   getAllMoviesDetail,
   getMovieByName,
+  getMovieByYear,
+  getMovieByType,
+  getMovieByRating,
   deleteMovie
 } = require("../controllers/movieController");
 
@@ -47,6 +50,9 @@ router.get("/detail", getAllMoviesDetail);
 router.get("/:id/detail", getMovieByIdDetail);
 
 router.get("/search", getMovieByName);
+router.get("/year", getMovieByYear);
+router.get("/type", getMovieByType);
+router.get("/rating", getMovieByRating);
 
 router.post("/", upload.single("file"), movieValidationRules, createMovie);
 

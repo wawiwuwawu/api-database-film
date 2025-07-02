@@ -19,7 +19,7 @@ const getMoviesByTheme = async (req, res) => {
   try {
     const { id } = req.params;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 25;
     const offset = (page - 1) * limit;
 
     const theme = await Theme.findByPk(id, {
@@ -43,6 +43,7 @@ const getMoviesByTheme = async (req, res) => {
 
 
     const movies = await Movie.findAll({
+      attributes: ['id', 'judul', 'cover_url'],
       include: {
         model: Theme,
         as: "themes",

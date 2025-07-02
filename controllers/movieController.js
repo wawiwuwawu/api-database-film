@@ -166,10 +166,11 @@ const createMovie = async (req, res) => {
 const getAllMovies = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 25; // default 25 per page
+    const limit = parseInt(req.query.limit) || 25;
     const offset = (page - 1) * limit;
 
     const { count, rows: movies } = await Movie.findAndCountAll({
+      attributes: ['id', 'judul', 'cover_url'],
       limit,
       offset,
       order: [['created_at', 'DESC']]
@@ -266,6 +267,7 @@ const getMovieByName = async (req, res) => {
     }
 
     const { count, rows: movies } = await Movie.findAndCountAll({
+      attributes: ['id', 'judul', 'cover_url'],
       where: sequelize.where(
         sequelize.fn('LOWER', sequelize.col('judul')),
         'LIKE',
@@ -278,6 +280,52 @@ const getMovieByName = async (req, res) => {
 
     if (movies.length === 0) {
       return res.status(404).json({ success: false, error: "Film tidak ditemukan" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: movies,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+const getMovieByYear = async (req, res) => {
+  try {
+    const { year } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    if (!year) {
+      return res.status(400).json({ success: false, error: "Tahun harus disertakan dalam query parameter" });
+    }
+
+    // Validasi tahun (harus berupa 4 digit angka)
+    const yearNum = parseInt(year);
+    if (isNaN(yearNum) || yearNum < 1900 || yearNum > new Date().getFullYear() + 10) {
+      return res.status(400).json({ success: false, error: "Tahun tidak valid" });
+    }
+
+    const { count, rows: movies } = await Movie.findAndCountAll({
+      attributes: ['id', 'judul', 'cover_url'],
+      where: {
+        tahun_rilis: yearNum
+      },
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
+    });
+
+    if (movies.length === 0) {
+      return res.status(404).json({ success: false, error: `Tidak ada film yang dirilis pada tahun ${year}` });
     }
 
     return res.status(200).json({
@@ -473,6 +521,104 @@ const deleteMovie = async (req, res) => {
   }
 };
 
+const getMovieByType = async (req, res) => {
+  try {
+    const { type } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    if (!type) {
+      return res.status(400).json({ success: false, error: "Tipe film harus disertakan dalam query parameter" });
+    }
+
+    // Validasi tipe yang diizinkan (sesuaikan dengan enum di model Movie)
+    const allowedTypes = ['Movie', 'TV', 'OVA', 'ONA'];
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `Tipe tidak valid. Tipe yang diizinkan: ${allowedTypes.join(', ')}` 
+      });
+    }
+
+    const { count, rows: movies } = await Movie.findAndCountAll({
+      attributes: ['id', 'judul', 'cover_url'],
+      where: {
+        type: type
+      },
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
+    });
+
+    if (movies.length === 0) {
+      return res.status(404).json({ success: false, error: `Tidak ada film dengan tipe ${type}` });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: movies,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+const getMovieByRating = async (req, res) => {
+  try {
+    const { rating } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
+
+    if (!rating) {
+      return res.status(400).json({ success: false, error: "Rating harus disertakan dalam query parameter" });
+    }
+
+    const allowedRatings = ['G', 'PG', 'PG-13', 'R', 'NC-17'];
+    if (!allowedRatings.includes(rating.toUpperCase())) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `Rating tidak valid. Rating yang diizinkan: ${allowedRatings.join(', ')}` 
+      });
+    }
+
+    const { count, rows: movies } = await Movie.findAndCountAll({
+      attributes: ['id', 'judul', 'cover_url'],
+      where: sequelize.where(
+        sequelize.fn('UPPER', sequelize.col('rating')),
+        sequelize.fn('UPPER', rating)
+      ),
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
+    });
+
+    if (movies.length === 0) {
+      return res.status(404).json({ success: false, error: `Tidak ada film dengan rating ${rating.toUpperCase()}` });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: movies,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 module.exports = {
   createMovie,
   getAllMovies,
@@ -481,5 +627,8 @@ module.exports = {
   getAllMoviesDetail,
   getMovieByIdDetail,
   getMovieByName,
-  deleteMovie
+  getMovieByYear,
+  deleteMovie,
+  getMovieByType,
+  getMovieByRating
 };

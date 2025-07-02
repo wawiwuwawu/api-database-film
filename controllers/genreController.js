@@ -20,7 +20,7 @@ const getMoviesByGenre = async (req, res) => {
   try {
     const { id } = req.params;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 25;
     const offset = (page - 1) * limit;
 
     const genre = await Genre.findByPk(id, {
@@ -40,6 +40,7 @@ const getMoviesByGenre = async (req, res) => {
 
     const movies = await Movie.findAll({
       include: { model: Genre, as: "genres", where: { id: id }, through: { attributes: [] } },
+      attributes: ['id', 'judul', 'cover_url'], // hanya ambil id, judul, cover_url
       limit: limit,
       offset: offset
     });
