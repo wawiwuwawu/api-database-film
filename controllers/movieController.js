@@ -170,7 +170,7 @@ const getAllMovies = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const { count, rows: movies } = await Movie.findAndCountAll({
-      attributes: ['id', 'judul', 'cover_url'],
+      attributes: ['id', 'judul', 'tahun_rilis', 'type', 'rating', 'cover_url'],
       limit,
       offset,
       order: [['created_at', 'DESC']]
