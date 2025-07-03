@@ -1,4 +1,4 @@
-const { Movie, Genre, Staff, Theme, Seiyu, Karakter, MovieSeiyu, MovieGenre, MovieStaff, MovieTheme } = require("../models");
+const { Movie, Genre, Staff, Theme, Seiyu, Karakter, MovieSeiyu, MovieGenre, MovieStaff, MovieTheme, MovieList } = require("../models");
 const { sequelize } = require("../models");
 const { uploadToImgur, deleteFromImgur } = require('../config/imgur');
 
@@ -244,12 +244,39 @@ const getMovieByIdDetail = async (req, res) => {
         { model: Genre, attributes: ['id', 'nama'], as : 'genres', through: { attributes: [] } },
         { model: Theme, attributes: ['id', 'nama'], as : 'themes', through: { attributes: [] } },
         { model: Staff, attributes: ['id', 'name', 'role', 'profile_url'], as : 'staffs', through: { attributes: [] } },
-        { model: Seiyu, attributes: ['id', 'name', 'profile_url'], through: { attributes: ['karakter_id'] }, as: 'seiyus', include: [{ model: Karakter, as: 'karakters', attributes: ['id', 'nama'], through: { attributes: [] } }] },
+        { model: Seiyu, attributes: ['id', 'name', 'profile_url'], as: 'seiyus', through: { attributes: ['karakter_id'] } },
         { model: Karakter, attributes: ['id', 'nama', 'profile_url'], as : 'karakters', through: { attributes: [] } }
       ]
     });
     if (!movie) return errorResponse(res, 404, "Film tidak ditemukan");
-    return res.status(200).json({ success: true, data: movie });
+
+    const savedCount = await MovieList.count({ where: { movie_id: req.params.id, status: 'disimpan' } });
+    const watchingCount = await MovieList.count({ where: { movie_id: req.params.id, status: 'ditonton' } });
+    const finishedCount = await MovieList.count({ where: { movie_id: req.params.id, status: 'sudah ditonton' } });
+
+    const seiyus = movie.seiyus.map(seiyu => {
+      const karakterId = seiyu.SeiyuMovie ? seiyu.SeiyuMovie.karakter_id : null;
+      const karakter = karakterId ? movie.karakters.find(k => k.id == karakterId) : null;
+      return {
+        ...seiyu.toJSON(),
+        karakter: karakter
+          ? { id: karakter.id, nama: karakter.nama, profile_url: karakter.profile_url }
+          : null
+      };
+    });
+
+    const movieData = movie.toJSON();
+    movieData.seiyus = seiyus;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...movieData,
+        savedCount,
+        watchingCount,
+        finishedCount
+      }
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
