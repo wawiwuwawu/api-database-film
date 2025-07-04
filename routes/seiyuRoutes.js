@@ -38,7 +38,7 @@ const limiter = rateLimit({
 
 const limiterPerSecond = rateLimit({
   windowMs: 1000,
-  max: 1,
+  max: 3,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'Terlalu cepat, tunggu sebentar.' },

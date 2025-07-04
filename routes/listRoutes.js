@@ -22,7 +22,7 @@ const limiter = rateLimit({
 
 const limiterPerSecond = rateLimit({
   windowMs: 1000, // 1 detik
-  max: 1, // max 1 request per detik
+  max: 3, // max 1 request per detik
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'Terlalu cepat, tunggu sebentar.' },

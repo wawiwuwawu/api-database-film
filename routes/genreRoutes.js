@@ -8,8 +8,8 @@ const {
 
 // Rate limit: 1 request per second, 30 per minute per IP
 const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 menit
-  max: 30, // max 30 request per menit
+  windowMs: 60 * 1000,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'Terlalu banyak request, coba lagi nanti.' },
@@ -17,8 +17,8 @@ const limiter = rateLimit({
 });
 
 const limiterPerSecond = rateLimit({
-  windowMs: 1000, // 1 detik
-  max: 1, // max 1 request per detik
+  windowMs: 1000,
+  max: 3,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'Terlalu cepat, tunggu sebentar.' },
