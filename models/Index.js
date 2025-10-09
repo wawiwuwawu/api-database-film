@@ -125,3 +125,5 @@ module.exports = {
   User,
   MovieList
 };
+
+// End of file models/index.js

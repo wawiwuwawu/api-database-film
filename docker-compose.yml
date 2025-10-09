@@ -18,18 +18,8 @@ services:
       - DB_DIALECT=mysql
       - JWT_SECRET=${JWT_SECRET}
       - PORT=5000
-      # Firebase configuration
-      # - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
-      # - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
-      # - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
-      # Email configuration
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-      # Google Drive API
-      # - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      # - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      # - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
-      # Imgur API
       - IMGUR_CLIENT_ID=${IMGUR_CLIENT_ID}
     volumes:
       - ./uploads:/app/uploads
