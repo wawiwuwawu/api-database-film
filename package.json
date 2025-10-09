@@ -22,7 +22,7 @@
     "imgur": "^1.0.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
-    "mysql2": "^3.14.0",
+    "mysql2": "^3.14.3",
     "nodemailer": "^7.0.3",
     "sequelize": "^6.37.7"
   }
