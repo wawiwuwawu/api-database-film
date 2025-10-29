@@ -4,6 +4,8 @@ FROM node:20-alpine
 # Tetapkan direktori kerja di dalam container
 WORKDIR /app
 
+RUN npm install pm2 -g
+
 # Salin package.json dan package-lock.json
 COPY package*.json ./
 
@@ -30,4 +32,4 @@ USER nodejs
 EXPOSE 5000
 
 # Perintah default. Ini akan kita override di docker-compose.
-CMD ["node", "app.js"]
+CMD ["pm2-runtime", "app.js"]
