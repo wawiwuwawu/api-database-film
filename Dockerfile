@@ -1,34 +1,33 @@
-# Use official Node.js runtime as base image
+# Gunakan base image Node.js LTS (versi 20-alpine)
 FROM node:20-alpine
 
-# Set working directory inside container
+# Tetapkan direktori kerja di dalam container
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
+# Salin package.json dan package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --only=production
+# Install SEMUA dependensi (termasuk devDependencies seperti nodemon)
+RUN npm install
 
-# Copy the rest of application code
+# Salin sisa kode aplikasi
+# Catatan: Kode ini akan "ditimpa" sementara oleh bind mount saat development
 COPY . .
 
-# Create uploads directory with proper permissions
+# Buat folder uploads jika diperlukan oleh aplikasi Anda
 RUN mkdir -p uploads && chmod 755 uploads
 
-# Create a non-root user to run the application
+# Buat user non-root untuk keamanan
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
-# Change ownership of the app directory to the nodejs user
+# Berikan kepemilikan folder /app ke user baru
 RUN chown -R nodejs:nodejs /app
+# Ganti ke user non-root
 USER nodejs
 
-# Expose the port that your app runs on
+# Expose port (ganti ini jika app.js Anda pakai port lain)
 EXPOSE 5000
 
-# Define environment variable for production
-ENV NODE_ENV=production
-
-# Command to run the application
+# Perintah default. Ini akan kita override di docker-compose.
 CMD ["node", "app.js"]

@@ -4,7 +4,9 @@
   "description": "ini adalah api untuk database film",
   "main": "index.js",
   "scripts": {
-    "test": "tes"
+    "test": "tes",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "author": "dede",
   "license": "ISC",
