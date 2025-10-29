@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   app-api-film:
     build: .
-    container_name: my-nodejs-app
+    container_name: api-database-film
     ports:
       - "5000:5000"
     env_file:
