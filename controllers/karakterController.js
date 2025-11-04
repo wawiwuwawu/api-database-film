@@ -60,7 +60,7 @@ const createKarakter = async (req, res) => {
   }
 }
 
-//tes coba
+//tes coba lagi
 
 const getAllKarakter = async (req, res) => {
   try {
