@@ -60,6 +60,8 @@ const createKarakter = async (req, res) => {
   }
 }
 
+//tes
+
 const getAllKarakter = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
